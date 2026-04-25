@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import "./LearnTalas.css";
 
 const LEARN_DATA = {
@@ -16,9 +17,7 @@ const LEARN_DATA = {
     videoTitle: "Tishra Alaripu — Classical Bharatanatyam Performance",
     videoCaption:
       "Observe how the dancer's movements align with each beat of the Tishra cycle. Notice the wave-like arm movement on beat 1 of each triplet group.",
-    structure: "3 beats × 1 avartanam",
     family: "Tishra Jati",
-    clapPattern: ["Clap", "Wave", "Wave"],
     syllables: [
       { label: "Avartanam 1", chips: ["Ta", "Ki", "Ta", "|", "Ta", "Ki", "Ta", "|", "Ta", "Ki", "Ta"] },
       { label: "Avartanam 2", chips: ["Ta", "Ka", "Ta", "Ki", "Ta", "|", "Ta", "Ka", "Ta", "Ki", "Ta"] },
@@ -50,9 +49,7 @@ const LEARN_DATA = {
     videoTitle: "Chatusra Alaripu — Classical Bharatanatyam Performance",
     videoCaption:
       "Observe how the dancer's movements align with each beat of the Chatusra cycle. Notice the systematic body-part progression on beat 1 and beat 3.",
-    structure: "4 beats × 2 avartanam",
     family: "Chatusra Jati",
-    clapPattern: ["Clap", "Wave", "Finger", "Wave"],
     syllables: [
       { label: "Avartanam 1", chips: ["Ta", "Ka", "Di", "Mi", "|", "Ta", "Ka", "Di", "Mi"] },
       { label: "Avartanam 2", chips: ["Tha", "Ka", "Dhi", "Mi", "|", "Tha", "Ka", "Dhi", "Mi"] },
@@ -84,9 +81,7 @@ const LEARN_DATA = {
     videoTitle: "Kandam Alaripu — Classical Bharatanatyam Performance",
     videoCaption:
       "Observe how the dancer's movements align with each beat of the Kandam cycle. Notice the angular emphasis around beat 4 before returning to sam.",
-    structure: "5 beats × 1 avartanam",
     family: "Khanda Jati",
-    clapPattern: ["Clap", "Finger", "Finger", "Wave", "Wave"],
     syllables: [
       { label: "Avartanam 1", chips: ["Ta", "Ka", "Ta", "Ki", "Ta", "|", "Ta", "Ka", "Ta", "Ki", "Ta"] },
       { label: "Avartanam 2", chips: ["Dhi", "Gi", "Na", "Thom", "Ka", "|", "Dhi", "Gi", "Na", "Thom", "Ka"] },
@@ -123,12 +118,6 @@ const PRONUNCIATION = [
   ["Mi", "Mee", "Soft closure"],
 ];
 
-const ACTION_ICON = {
-  Clap: "👏",
-  Wave: "🤚",
-  Finger: "☝",
-};
-
 function formatTime(seconds) {
   if (!Number.isFinite(seconds)) return "0:00";
   const mins = Math.floor(seconds / 60);
@@ -143,6 +132,7 @@ function createGradient(color) {
 }
 
 function LearnTalas() {
+  const { user } = useAuth();
   const [selectedTala, setSelectedTala] = useState("tishra");
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -153,6 +143,7 @@ function LearnTalas() {
   const [activeBeat, setActiveBeat] = useState(0);
   const [isPronunciationOpen, setIsPronunciationOpen] = useState(false);
   const [progress, setProgress] = useState(DEFAULT_PROGRESS);
+  const [isProgressHydrated, setIsProgressHydrated] = useState(false);
   const [hoverTime, setHoverTime] = useState(null);
   const [isSeeking, setIsSeeking] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -160,12 +151,16 @@ function LearnTalas() {
   const [videoOverlayVisible, setVideoOverlayVisible] = useState(true);
 
   const audioRef = useRef(null);
-  const metronomeRef = useRef(null);
   const syllableRef = useRef(null);
   const progressTrackRef = useRef(null);
   const videoRef = useRef(null);
 
   const tala = LEARN_DATA[selectedTala];
+
+  const progressStorageKey = useMemo(() => {
+    const identity = user?.id || user?.user_id || user?.email || user?.username || "guest";
+    return `tala_learn_progress_${String(identity).toLowerCase()}`;
+  }, [user]);
 
   const progressForSelected = progress[selectedTala] || DEFAULT_PROGRESS[selectedTala];
 
@@ -176,23 +171,14 @@ function LearnTalas() {
 
   const overallPercent = (totalLearned / 3) * 100;
 
-  const stopMetronome = () => {
-    if (metronomeRef.current) {
-      clearInterval(metronomeRef.current);
-      metronomeRef.current = null;
-    }
+  const resetBeatIndicator = () => {
     setActiveBeat(0);
   };
 
-  const startMetronome = (bpm, beats) => {
-    stopMetronome();
-    const interval = Math.round(60000 / bpm);
-    let beatIndex = 0;
-    setActiveBeat(0);
-    metronomeRef.current = setInterval(() => {
-      beatIndex = (beatIndex + 1) % beats;
-      setActiveBeat(beatIndex);
-    }, interval);
+  const syncBeatIndicator = (timeInSeconds) => {
+    if (!Number.isFinite(timeInSeconds) || !tala.beats || !tala.bpm) return;
+    const beatIndex = Math.floor((timeInSeconds * tala.bpm) / 60) % tala.beats;
+    setActiveBeat(beatIndex);
   };
 
   const markProgress = (talaKey, field) => {
@@ -212,7 +198,7 @@ function LearnTalas() {
     if (isPlaying) {
       audio.pause();
       setIsPlaying(false);
-      stopMetronome();
+      resetBeatIndicator();
       return;
     }
 
@@ -223,10 +209,10 @@ function LearnTalas() {
       await audio.play();
       setIsPlaying(true);
       markProgress(selectedTala, "listened");
-      startMetronome(tala.bpm, tala.beats);
+      syncBeatIndicator(audio.currentTime || 0);
     } catch {
       setIsPlaying(false);
-      stopMetronome();
+      resetBeatIndicator();
     }
   };
 
@@ -279,7 +265,8 @@ function LearnTalas() {
   };
 
   useEffect(() => {
-    const stored = localStorage.getItem("tala_learn_progress");
+    setIsProgressHydrated(false);
+    const stored = localStorage.getItem(progressStorageKey);
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
@@ -287,12 +274,16 @@ function LearnTalas() {
       } catch {
         setProgress(DEFAULT_PROGRESS);
       }
+    } else {
+      setProgress(DEFAULT_PROGRESS);
     }
-  }, []);
+    setIsProgressHydrated(true);
+  }, [progressStorageKey]);
 
   useEffect(() => {
-    localStorage.setItem("tala_learn_progress", JSON.stringify(progress));
-  }, [progress]);
+    if (!isProgressHydrated) return;
+    localStorage.setItem(progressStorageKey, JSON.stringify(progress));
+  }, [progress, progressStorageKey, isProgressHydrated]);
 
   useEffect(() => {
     const target = syllableRef.current;
@@ -317,12 +308,16 @@ function LearnTalas() {
     const audio = audioRef.current;
     if (!audio) return undefined;
 
-    const onTimeUpdate = () => setCurrentTime(audio.currentTime || 0);
+    const onTimeUpdate = () => {
+      const time = audio.currentTime || 0;
+      setCurrentTime(time);
+      syncBeatIndicator(time);
+    };
     const onLoadedMetadata = () => setDuration(audio.duration || 0);
     const onEnded = () => {
       if (!isLooping) {
         setIsPlaying(false);
-        stopMetronome();
+        resetBeatIndicator();
         setCurrentTime(0);
       }
     };
@@ -336,7 +331,7 @@ function LearnTalas() {
       audio.removeEventListener("loadedmetadata", onLoadedMetadata);
       audio.removeEventListener("ended", onEnded);
     };
-  }, [isLooping]);
+  }, [isLooping, tala.beats, tala.bpm]);
 
   useEffect(() => {
     const onMouseUp = () => setIsSeeking(false);
@@ -369,14 +364,14 @@ function LearnTalas() {
     setVideoOverlayVisible(true);
     setHoverTime(null);
     setShowTooltip(false);
-    stopMetronome();
+    resetBeatIndicator();
 
     return () => {
-      stopMetronome();
+      resetBeatIndicator();
     };
   }, [selectedTala]);
 
-  useEffect(() => () => stopMetronome(), []);
+  useEffect(() => () => resetBeatIndicator(), []);
 
   const selectedCompletion = Object.values(progressForSelected).filter(Boolean).length;
 
@@ -591,52 +586,13 @@ function LearnTalas() {
           <div className="details-grid">
             <div className="details-left">
               <h2>About this Tala</h2>
-              <div className="info-row"><strong>Structure</strong><span>{tala.structure}</span></div>
               <div className="info-row"><strong>Tala Family</strong><span>{tala.family}</span></div>
               <div className="info-row"><strong>Tempo (Kala)</strong><span>Prathama Kala (Slow) → Dwithiya Kala (Medium) → Thrithiya Kala (Fast)</span></div>
               <div className="info-row"><strong>Origin</strong><span>Natya Shastra, ~200 BCE</span></div>
               <div className="info-row"><strong>Used In</strong><span>Alaripu, Jatiswaram, Varnam</span></div>
-
-              <h3>Body Parts Introduced</h3>
-              <ul className="body-parts-list">
-                {tala.bodyParts.map((item, idx) => (
-                  <li key={`${item.name}-${idx}`} style={{ animationDelay: `${idx * 0.08}s` }}>
-                    <span>{item.icon}</span>
-                    <p>{item.name} <small>({item.sanskrit})</small></p>
-                  </li>
-                ))}
-              </ul>
             </div>
 
             <div className="details-right">
-              <h2>Rhythm Structure</h2>
-              <div className="rhythm-grid-wrap">
-                {Array.from({ length: tala.avartanams }).map((_, rowIdx) => (
-                  <div key={rowIdx} className="rhythm-row">
-                    {Array.from({ length: tala.beats }).map((__, beatIdx) => (
-                      <div
-                        key={beatIdx}
-                        className={`rhythm-cell ${beatIdx === 0 ? "sam" : ""}`}
-                        style={{
-                          background:
-                            beatIdx === 0
-                              ? tala.color
-                              : `color-mix(in srgb, ${tala.color} ${Math.max(25, 70 - beatIdx * 12)}%, transparent)`,
-                        }}
-                      >
-                        {beatIdx === 0 ? "Sam (ஸம்)" : beatIdx + 1}
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-
-              <h3>Clap Pattern (Kriya)</h3>
-              <div className="kriya-row">
-                {tala.clapPattern.map((action, idx) => (
-                  <span key={`${action}-${idx}`}>{ACTION_ICON[action]} {action}</span>
-                ))}
-              </div>
             </div>
           </div>
         </article>

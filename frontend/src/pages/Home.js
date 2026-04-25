@@ -27,7 +27,11 @@ function Home() {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setResult(data);
-      toast.success("Tala detected successfully.");
+      if (data?.not_detected || data?.predicted === "unknown") {
+        toast("Tala not detected clearly. Try a cleaner rhythmic sample.");
+      } else {
+        toast.success("Tala detected successfully.");
+      }
     } catch (err) {
       toast.error(err?.response?.data?.error || "Detection failed");
     } finally {

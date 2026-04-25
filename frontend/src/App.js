@@ -23,8 +23,9 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/" element={<BharatanatyamPage />} />
           <Route
-            path="/"
+            path="/detect"
             element={
               <ProtectedRoute>
                 <Home />

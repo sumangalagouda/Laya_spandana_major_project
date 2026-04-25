@@ -14,7 +14,7 @@ function Navbar() {
       <div className="nav-brand" onClick={() => navigate("/")} role="button" tabIndex={0}>
         <span className="om-icon">ॐ</span>
         <div>
-          <h1>Tala Detector</h1>
+          <h1>Laya Spandana</h1>
           <p>Bharatanatyam Alaripu</p>
         </div>
       </div>
@@ -22,11 +22,11 @@ function Navbar() {
       <div className="nav-center-line">✦ ✦ ✦</div>
 
       <nav className="nav-links">
-        <NavLink to="/">Detect</NavLink>
+        <NavLink to="/detect">Detect</NavLink>
         <NavLink to="/learn">🎓 Learn</NavLink>
         <NavLink to="/history">History</NavLink>
         <NavLink to="/about">About</NavLink>
-        <NavLink to="/bharatanatyam">💃 Bharatanatyam</NavLink>
+        <NavLink to="/bharatanatyam"> Bharatanatyam</NavLink>
         {isAuthenticated && (
           <>
             <span className="avatar-circle">{avatarLetter}</span>

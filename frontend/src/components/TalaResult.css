@@ -74,24 +74,6 @@
   transition: stroke-dashoffset 1s ease;
 }
 
-.beat-visualiser {
-  margin: 1rem 0;
-  display: flex;
-  gap: 0.65rem;
-  flex-wrap: wrap;
-}
-
-.beat-circle {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 2px solid var(--gold);
-  display: grid;
-  place-items: center;
-  background: rgba(0,0,0,0.26);
-  animation: glow-pulse 2.2s ease-in-out infinite;
-}
-
 .score-bars {
   display: grid;
   gap: 0.5rem;
@@ -118,6 +100,15 @@
 
 .score-fill.active {
   filter: drop-shadow(0 0 8px rgba(212,175,55,0.55));
+}
+
+.unknown-note {
+  margin-top: 0.8rem;
+  border: 1px solid rgba(127,140,141,0.45);
+  border-radius: 12px;
+  padding: 0.65rem 0.75rem;
+  color: #e0e6e6;
+  background: rgba(127,140,141,0.14);
 }
 
 .tabs-row {

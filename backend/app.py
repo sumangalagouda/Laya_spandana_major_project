@@ -89,6 +89,24 @@ TALA_INFO = {
     },
 }
 
+UNKNOWN_TALA_INFO = {
+    "name": "Not Detected",
+    "sanskrit": "अज्ञात ताल",
+    "tamil": "தாளம் கண்டறியப்படவில்லை",
+    "beats": 0,
+    "color": "#7F8C8D",
+    "description": "This audio does not confidently match Tishra, Chatusra, or Kandam.",
+    "history": "",
+    "characteristics": [],
+    "mudras": [],
+    "associated_ragas": [],
+    "performance_tips": "Please upload a clearer Alaripu sample with steady rhythm and low background noise.",
+}
+
+MIN_TALA_CONFIDENCE = 0.55
+MIN_TALA_MARGIN = 0.12
+MIN_SIGNAL_STD = 0.01
+
 
 class User(db.Model):
     __tablename__ = "users"
@@ -256,9 +274,11 @@ def predict():
         audio_file.save(temp_path)
 
         waveform = preprocess_audio(temp_path)
+        signal_std = float(np.std(waveform))
         embedding, _, _ = extract_embedding(waveform)
 
         pred_probs = classifier_model.predict(np.expand_dims(embedding, axis=0), verbose=0)[0]
+        sorted_indices = np.argsort(pred_probs)[::-1]
         predicted_idx = int(np.argmax(pred_probs))
 
         if hasattr(label_encoder, "inverse_transform"):
@@ -270,15 +290,37 @@ def predict():
         predicted_label = str(predicted_label).lower()
         confidence = float(pred_probs[predicted_idx])
 
-        class_map = {"tishra": 0, "chatusra": 1, "kandam": 2}
-        tishra_score = float(pred_probs[class_map["tishra"]]) if len(pred_probs) > class_map["tishra"] else 0.0
-        chatusra_score = float(pred_probs[class_map["chatusra"]]) if len(pred_probs) > class_map["chatusra"] else 0.0
-        kandam_score = float(pred_probs[class_map["kandam"]]) if len(pred_probs) > class_map["kandam"] else 0.0
+        second_best_confidence = float(pred_probs[sorted_indices[1]]) if len(sorted_indices) > 1 else 0.0
+        confidence_margin = confidence - second_best_confidence
+
+        if hasattr(label_encoder, "classes_"):
+            ordered_classes = [str(name).lower() for name in label_encoder.classes_]
+        else:
+            ordered_classes = [str(name).lower() for name in model_config.get("class_names", ["tishra", "chatusra", "kandam"])]
+
+        class_map = {name: idx for idx, name in enumerate(ordered_classes)}
+
+        def class_score(name: str):
+            idx = class_map.get(name)
+            return float(pred_probs[idx]) if idx is not None and len(pred_probs) > idx else 0.0
+
+        tishra_score = class_score("tishra")
+        chatusra_score = class_score("chatusra")
+        kandam_score = class_score("kandam")
+
+        is_not_detected = (
+            signal_std < MIN_SIGNAL_STD
+            or confidence < MIN_TALA_CONFIDENCE
+            or confidence_margin < MIN_TALA_MARGIN
+        )
+
+        final_label = "unknown" if is_not_detected else predicted_label
+        final_tala_info = UNKNOWN_TALA_INFO if is_not_detected else TALA_INFO.get(predicted_label, TALA_INFO["chatusra"])
 
         record = Prediction(
             user_id=user_id,
             filename=safe_name,
-            predicted=predicted_label,
+            predicted=final_label,
             confidence=confidence,
             tishra_score=tishra_score,
             chatusra_score=chatusra_score,
@@ -288,19 +330,18 @@ def predict():
         db.session.add(record)
         db.session.commit()
 
-        tala_info = TALA_INFO.get(predicted_label, TALA_INFO["chatusra"])
-
         return (
             jsonify(
                 {
-                    "predicted": predicted_label,
+                    "predicted": final_label,
                     "confidence": confidence,
+                    "not_detected": is_not_detected,
                     "scores": {
                         "tishra": tishra_score,
                         "chatusra": chatusra_score,
                         "kandam": kandam_score,
                     },
-                    "tala_info": tala_info,
+                    "tala_info": final_tala_info,
                     "record_id": record.id,
                 }
             ),

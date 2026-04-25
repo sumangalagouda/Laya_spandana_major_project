@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./BharatanatyamPage.css";
 
@@ -6,7 +6,6 @@ const timelineEvents = [
   {
     year: "200 BCE",
     title: "Natya Shastra",
-    icon: "📜",
     color: "#D4AF37",
     description:
       "Sage Bharata Muni composes the Natya Shastra — the foundational treatise on Indian performing arts. It codifies 108 karanas, dramatic forms, and the theory of rasa and bhava that underpins all classical dance.",
@@ -14,7 +13,6 @@ const timelineEvents = [
   {
     year: "6th Century CE",
     title: "Temple Devadasi Tradition",
-    icon: "🏛️",
     color: "#FF6B00",
     description:
       "Bharatanatyam flourishes in South Indian temples as Sadir Attam. Devadasis perform daily for the deity while dynasties such as the Cholas and Pallavas patronize the art.",
@@ -22,7 +20,6 @@ const timelineEvents = [
   {
     year: "Chola Period",
     title: "Bronze Nataraja Icons",
-    icon: "🗿",
     color: "#C0392B",
     description:
       "The Chola dynasty creates iconic bronze Nataraja sculptures that become the visual grammar of Bharatanatyam and a timeless model for dancers.",
@@ -30,7 +27,6 @@ const timelineEvents = [
   {
     year: "1892",
     title: "British Colonial Ban",
-    icon: "⚖️",
     color: "#5D4037",
     description:
       "The Anti-Nautch Act suppresses Devadasi performances. With declining temple patronage and social stigma, the form faces near extinction.",
@@ -38,7 +34,6 @@ const timelineEvents = [
   {
     year: "1930s",
     title: "The Great Revival",
-    icon: "🌸",
     color: "#D4AF37",
     description:
       "E. Krishna Iyer and Rukmini Devi Arundale revive and reform the art, renaming it Bharatanatyam and introducing it to modern proscenium stages.",
@@ -46,7 +41,6 @@ const timelineEvents = [
   {
     year: "1936",
     title: "Kalakshetra Founded",
-    icon: "🏫",
     color: "#FF6B00",
     description:
       "Rukmini Devi establishes Kalakshetra in Chennai, creating a major institutional ecosystem for training, repertory, and pedagogy.",
@@ -62,7 +56,6 @@ const timelineEvents = [
   {
     year: "2016",
     title: "UNESCO Recognition",
-    icon: "🌍",
     color: "#D4AF37",
     description:
       "UNESCO recognizes Indian classical dance traditions, including Bharatanatyam, as Intangible Cultural Heritage of Humanity.",
@@ -71,44 +64,56 @@ const timelineEvents = [
 
 const abhinayaCards = [
   {
-    icon: "🤲",
+    key: "angika",
     color: "#D4AF37",
     title: "Angika Abhinaya",
     sanskrit: "आंगिक अभिनय",
     subtitle: "Expression through body movement",
     description:
       "The body becomes language through karanas, hastas, drishti bhedas and greeva bhedas. Angika builds semantic precision in every gesture.",
+    detailed:
+      "Angika trains the dancer to communicate through posture, limbs, glances, and coordinated movement vocabulary. It transforms physical technique into visual meaning.",
     tags: ["108 Karanas", "64 Hastas", "Eye movements", "Footwork"],
+    image: "/images/abhinaya-angika.png",
   },
   {
-    icon: "🎵",
+    key: "vachika",
     color: "#FF6B00",
     title: "Vachika Abhinaya",
     sanskrit: "वाचिक अभिनय",
     subtitle: "Expression through voice and sound",
     description:
       "The sung sahitya, nattuvangam recitation, and rhythmic syllables form the sonic grammar that the dancer embodies with clarity and timing.",
+    detailed:
+      "Vachika connects the dancer with music, text, and recitation. The expressive body responds to lyrical meaning, melodic shape, and rhythmic articulation.",
     tags: ["Sahitya", "Solkattu", "Raga melody", "Rhythm syllables"],
+    image: "/images/abhinaya-vachika.png",
   },
   {
-    icon: "👗",
+    key: "aharya",
     color: "#8E44AD",
     title: "Aharya Abhinaya",
     sanskrit: "आहार्य अभिनय",
     subtitle: "Expression through costume and makeup",
     description:
       "Costume, jewelry, and stage makeup elevate readability and character. Aharya amplifies narrative visibility while preserving tradition.",
+    detailed:
+      "Aharya shapes the outer visual world of performance through costume grammar, ornaments, and makeup. It supports character clarity and stage presence.",
     tags: ["Silk saree", "Temple jewelry", "Stage makeup", "Flower garlands"],
+    image: "/images/abhinaya-aharya.png",
   },
   {
-    icon: "✨",
+    key: "sattvika",
     color: "#1A6B8A",
     title: "Sattvika Abhinaya",
     sanskrit: "सात्विक अभिनय",
     subtitle: "Expression through inner emotion",
     description:
       "The most subtle path where inner states surface naturally — trembling, tears, and stillness. It arises from lived emotional truth.",
+    detailed:
+      "Sattvika is the subtlest dimension of abhinaya where deeply internalized emotion appears naturally. It is cultivated through sensitivity, concentration, and lived experience.",
     tags: ["Tears of joy", "Goosebumps", "Natural trembling", "Inner experience"],
+    image: "/images/abhinaya-sattvika.png",
   },
 ];
 
@@ -123,13 +128,233 @@ const margamItems = [
   { n: 8, name: "Mangalam", icon: "🙏", color: "#27AE60", dur: "2-3 min", type: "Devotional", desc: "Auspicious closing prayer." },
 ];
 
-const ornaments = [
-  ["🌸", "Kondai", "குண்டலம்", "Hair bun adorned with jasmine and ornaments."],
-  ["💛", "Jimikki", "ஜிமிக்கி", "Chandelier earrings that sparkle under stage lights."],
-  ["💍", "Oddiyanam", "ஒட்டியாணம்", "Waist belt that defines torso and anchors drape."],
-  ["🔴", "Pottu", "பொட்டு", "Pronounced forehead mark for stage visibility."],
-  ["🦶", "Salangai", "சலங்கை", "Sacred ankle bells, the audible voice of dance."],
-  ["👗", "Costume", "உடை", "Silk costume with fan pleats opening in Aramandi."],
+const margamInfo = {
+  Alaripu: {
+    subtitle: "Nrityabandha in Invocation Form",
+    meaning:
+      "Alaripu is understood as the blossoming of limbs and awareness. It is traditionally the opening item, offered first to the divine, then to the guru, and then to the audience.",
+    details: [
+      "It belongs to the pure dance stream (Nritta), focused on rhythm and movement rather than narrative storytelling.",
+      "The body is opened gradually in sequence: eyes, neck, shoulders, arms, torso, hips, knees, and feet.",
+      "The format is often taught in three segments, each increasing the physical and rhythmic engagement.",
+      "It prepares both performer and audience for the full recital by aligning breath, posture, and tala discipline.",
+    ],
+    sequence: [
+      "Opening salute with Anjali hasta and respectful bow to deity, guru, and audience.",
+      "Progressive rhythmic movement phrases that expand from subtle to full-body coordination.",
+      "Concluding korvai and Mukthaya to complete the invocation cycle.",
+    ],
+    referenceNotes: ["Tishram", "Chatushram", "Khandam", "Mishram", "Sankeernam"],
+  },
+  Jatiswaram: {
+    subtitle: "Rhythm-Melody Expansion",
+    meaning:
+      "Jatiswaram is the second item of the Margam where laya (rhythm) and swara (melodic structure) take priority in a pure dance framework.",
+    details: [
+      "It strengthens adavu precision through extended movement patterns and clean geometry.",
+      "The item is largely non-narrative and showcases coordination between rhythm, melody, and footwork.",
+      "It is often presented through Pallavi, Anupallavi and Charanam structures with evolving jathi patterns.",
+      "The dancer demonstrates control, stamina, and clarity while the nattuvanar guides complex rhythmic passages.",
+    ],
+    sequence: [
+      "Establish opening jathi-swara motifs with steady tala anchoring.",
+      "Expand into layered adavu combinations and directional movement patterns.",
+      "Close with energetic concluding korvais aligned to melodic cadence.",
+    ],
+    referenceNotes: ["Pallavi", "Anupallavi", "Charanam", "Raga-based swara patterns"],
+  },
+  Shabdam: {
+    subtitle: "First Expressive Entry",
+    meaning:
+      "Shabdam is the first Margam item where sahitya and abhinaya become central, moving beyond pure rhythmic architecture.",
+    details: [
+      "It introduces lyrical storytelling while still retaining rhythmic support.",
+      "Common themes include devotion, reverence, and episodes from mythology.",
+      "Compared to Alaripu and Jatiswaram, Shabdam gives greater room for expressive interpretation.",
+      "The pace is usually moderate, allowing emotional content to be communicated clearly.",
+    ],
+    sequence: [
+      "Present lyrical line and its emotional context.",
+      "Alternate expressive passages with measured rhythmic links.",
+      "Complete with devotional or narrative closure to prepare for deeper abhinaya works.",
+    ],
+    referenceNotes: ["Sahitya", "Abhinaya", "Mythological episodes", "Devotional praise"],
+  },
+  Varnam: {
+    subtitle: "The Central Masterpiece",
+    meaning:
+      "Varnam is the longest and most demanding centerpiece of a Bharatanatyam recital, combining Nritta and Nritya at full depth.",
+    details: [
+      "It tests endurance, command over tala, and emotional maturity in a single composition.",
+      "Thematic core is often Nayaka-Nayaki bhava, devotion, or intense longing.",
+      "Varnam usually includes multiple speed and intensity layers, making it technically and artistically decisive.",
+      "Traditionally, Varnam sections include Pallavi, Anupallavi, Mukthayi Swaram, Charanam, and Chittai Swaram/Sahityam.",
+    ],
+    sequence: [
+      "Build central emotional proposition through Pallavi and Anupallavi.",
+      "Move through alternating nritta passages and expressive sancharis.",
+      "Resolve through Charanam and final swara-sahitya architecture.",
+    ],
+    referenceNotes: ["Taana Varnam", "Chouka Varnam", "Swarajathi Varnam", "Pada Varnam"],
+  },
+  Padam: {
+    subtitle: "Abhinaya in Slow Depth",
+    meaning:
+      "Padam is a slow-paced expressive form presented after strenuous nritta segments, allowing deep emotional interpretation.",
+    details: [
+      "It is centered on nuanced abhinaya, subtle facial work, and inward emotional states.",
+      "Padams often explore devotional and Nayika-centric themes with poetic lyricism.",
+      "Though movement is minimal compared to earlier items, interpretive sophistication is very high.",
+      "Musical and literary sensitivity is essential for authentic Padam rendition.",
+    ],
+    sequence: [
+      "Set emotional landscape through sahitya and raga mood.",
+      "Develop layered inner states through abhinaya micro-transitions.",
+      "Conclude with stillness-driven resolution rather than physical climax.",
+    ],
+    referenceNotes: ["Slow tempo", "Bhakti and Nayika bhava", "Abhinaya-centric", "Often in Misra Chapu"],
+  },
+  Javali: {
+    subtitle: "Light, Romantic Expressive Piece",
+    meaning:
+      "Javali is a lighter expressive composition, typically romantic in flavor and more direct in emotional language than Padam.",
+    details: [
+      "It carries lively charm and colloquial immediacy with shorter expressive arcs.",
+      "Themes frequently include love, playful complaint, and personal emotional dialogue.",
+      "Compared with Padam, Javali usually feels brisker and less contemplative.",
+      "It offers space for charisma, timing, and expressive agility.",
+    ],
+    sequence: [
+      "Introduce romantic or playful emotional premise.",
+      "Develop interaction-style abhinaya with dynamic shifts.",
+      "Finish with a concise expressive closure before the recital moves forward.",
+    ],
+    referenceNotes: ["Lighter than Padam", "Love-oriented sahitya", "Rakthi/Deshiya ragas", "Expressive agility"],
+  },
+  Thillana: {
+    subtitle: "Brisk Rhythmic Finale",
+    meaning:
+      "Thillana is the vibrant near-concluding nritta item known for speed, footwork brilliance, and rhythmic sparkle.",
+    details: [
+      "It emphasizes jathi-rich movement, energetic patterns, and stage dynamism.",
+      "Compositional format often includes pallavi, anupallavi, and charanam with sollukattu syllables.",
+      "Some Thillanas include brief sahitya passages, often devotional or honoring patrons.",
+      "It serves as a celebratory release before final benediction.",
+    ],
+    sequence: [
+      "Launch with lively rhythmic motif and crisp footwork.",
+      "Expand through patterned speed variations and spatial choreography.",
+      "Conclude with emphatic finale cadence setting up Mangalam.",
+    ],
+    referenceNotes: ["High tempo", "Sollukattu-rich", "Footwork virtuosity", "Brilliant finale energy"],
+  },
+  Mangalam: {
+    subtitle: "Auspicious Benediction",
+    meaning:
+      "Mangalam is the closing benediction of the recital, offering gratitude and auspicious completion.",
+    details: [
+      "It marks respectful closure to deity, guru, musicians, and audience.",
+      "Movement language is simpler and devotional in tone.",
+      "The emotional color shifts to peace, humility, and completion.",
+      "Mangalam seals the Margam as a spiritual and artistic journey.",
+    ],
+    sequence: [
+      "Invoke final devotional salutation.",
+      "Offer gratitude through composed concluding gestures.",
+      "Close with stillness and auspicious sign-off.",
+    ],
+    referenceNotes: ["Benedictory close", "Devotional mood", "Respectful gratitude", "Auspicious ending"],
+  },
+};
+
+const costumeItems = [
+  {
+    key: "kondai",
+
+    name: "Kondai",
+    tamil: "கொண்டை",
+    short: "Hair arrangement and floral crown",
+    description:
+      "Kondai is the traditional hair bun styling for Bharatanatyam, usually decorated with flowers and ornaments to frame the head and silhouette.",
+    highlights: [
+      "Maintains a clean classical profile on stage",
+      "Supports placement of head ornaments",
+      "Enhances visibility of neck and face lines",
+    ],
+    image: "/images/costume-kondai.png",
+  },
+  {
+    key: "jimikki",
+
+    name: "Jimikki",
+    tamil: "ஜிமிக்கி",
+    short: "Traditional temple earrings",
+    description:
+      "Jimikki are bell-shaped earrings that brighten facial movement and catch stage light during head and neck transitions.",
+    highlights: [
+      "Accents head turns and drishti changes",
+      "Pairs with classical temple-jewelry sets",
+      "Adds rhythmic visual sparkle",
+    ],
+    image: "/images/costume-jimikki.png",
+  },
+  {
+    key: "oddiyanam",
+
+    name: "Oddiyanam",
+    tamil: "ஒட்டியாணம்",
+    short: "Waist belt of the costume",
+    description:
+      "Oddiyanam is the ornamental waist belt that secures the costume drape and visually defines torso alignment.",
+    highlights: [
+      "Keeps pleats and saree drape stable",
+      "Emphasizes posture and aramandi geometry",
+      "Creates clean central body line",
+    ],
+    image: "/images/costume-oddiyanam.png",
+  },
+  {
+    key: "head-piece",
+    name: "Head Piece",
+    tamil: "தலை அலங்காரம்",
+    short: "Forehead and hairline ornament set",
+    description:
+      "The head piece (such as netti chutti and side ornaments) frames the forehead and strengthens facial expression visibility under stage lighting.",
+    highlights: [
+      "Replaces simple forehead marking focus",
+      "Frames abhinaya expressions clearly",
+      "Balances the full costume aesthetic",
+    ],
+    image: "/images/costume-head-piece.png",
+  },
+  {
+    key: "salangai",
+    name: "Salangai",
+    tamil: "சலங்கை",
+    short: "Ankle bells for rhythmic articulation",
+    description:
+      "Salangai are sacred ankle bells that make footwork audible and synchronize dancer movement with tala.",
+    highlights: [
+      "Translates footwork into clear sound",
+      "Strengthens tala discipline",
+      "Essential for nritta precision",
+    ],
+    image: "/images/costume-salangai.png",
+  },
+  {
+    key: "costume",
+    name: "Costume",
+    tamil: "உடை",
+    short: "Pleated Bharatanatyam attire",
+    description:
+      "The Bharatanatyam costume is designed for geometry and movement; fan pleats open during araimandi and jumps to make adavu lines readable.",
+    highlights: [
+      "Supports dynamic movement without loss of form",
+      "Highlights lower-body rhythm patterns",
+      "Connects visual tradition with stage practicality",
+    ],
+    image: "/images/costume-attire.png",
+  },
 ];
 
 const exponents = [
@@ -190,24 +415,24 @@ const exponents = [
 ];
 
 const rasas = [
-  ["❤️", "Shringara", "श्रृंगार", "சிங்காரம்", "Love/Beauty", "#C0392B", "Graceful romantic and devotional expression."],
-  ["😄", "Hasya", "हास्य", "ஹாஸ்யம்", "Joy/Humor", "#F39C12", "Playful brightness and comic charm."],
-  ["😢", "Karuna", "करुण", "கருணை", "Compassion/Sorrow", "#2980B9", "Slow gestures and tender emotional weight."],
-  ["😠", "Raudra", "रौद्र", "ரௌத்ரம்", "Fury/Anger", "#E74C3C", "Forceful stance and fierce energy."],
-  ["⚔️", "Vira", "वीर", "வீரம்", "Heroism/Courage", "#D4AF37", "Upright power and resolute rhythm."],
-  ["😱", "Bhayanaka", "भयानक", "பயானகம்", "Terror/Fear", "#5D4037", "Tension, recoil, and trembling anticipation."],
-  ["🤢", "Bibhatsa", "बीभत्स", "பீபத்ஸம்", "Disgust", "#616161", "Repulsion shown through withdrawal."],
-  ["😲", "Adbhuta", "अद्भुत", "அத்புதம்", "Wonder", "#8E44AD", "Astonishment before divine marvel."],
-  ["🕊️", "Shanta", "शांत", "சாந்தம்", "Serenity", "#1A6B8A", "Stillness and meditative resolution."],
+  [ "Shringara", "श्रृंगार", "சிங்காரம்", "Love/Beauty", "#C0392B", "Graceful romantic and devotional expression."],
+  [ "Hasya", "हास्य", "ஹாஸ்யம்", "Joy/Humor", "#F39C12", "Playful brightness and comic charm."],
+  ["Karuna", "करुण", "கருணை", "Compassion/Sorrow", "#2980B9", "Slow gestures and tender emotional weight."],
+  ["Raudra", "रौद्र", "ரௌத்ரம்", "Fury/Anger", "#E74C3C", "Forceful stance and fierce energy."],
+  ["Vira", "वीर", "வீரம்", "Heroism/Courage", "#D4AF37", "Upright power and resolute rhythm."],
+  ["Bhayanaka", "भयानक", "பயானகம்", "Terror/Fear", "#5D4037", "Tension, recoil, and trembling anticipation."],
+  ["Bibhatsa", "बीभत्स", "பீபத்ஸம்", "Disgust", "#616161", "Repulsion shown through withdrawal."],
+  ["Adbhuta", "अद्भुत", "அத்புதம்", "Wonder", "#8E44AD", "Astonishment before divine marvel."],
+  ["Shanta", "शांत", "சாந்தம்", "Serenity", "#1A6B8A", "Stillness and meditative resolution."],
 ];
 
 const instruments = [
-  ["🥁", "Mridangam", "मृदंगम्", "#D4AF37", "The rhythmic backbone responding to footwork in real time."],
-  ["🎸", "Veena", "वीणा", "#FF6B00", "Deep resonant melodic frame for raga expression."],
-  ["🎵", "Flute (Venu)", "वेणु", "#27AE60", "Breath-driven timbre ideal for lyrical passages."],
-  ["🎤", "Nattuvangam", "नट्टुवांगम्", "#C0392B", "Conducting syllables and cymbal timekeeping by the guru."],
-  ["🎻", "Violin", "बेला", "#8E44AD", "Expressive melodic companion to vocalist and dancer."],
-  ["🎙️", "Vocalist", "गायक", "#1A6B8A", "Delivers sahitya that the dancer embodies word-by-word."],
+  ["Mridangam", "मृदंगम्", "#D4AF37", "The rhythmic backbone responding to footwork in real time."],
+  ["Veena", "वीणा", "#FF6B00", "Deep resonant melodic frame for raga expression."],
+  [ "Flute (Venu)", "वेणु", "#27AE60", "Breath-driven timbre ideal for lyrical passages."],
+  ["Nattuvangam", "नट्टुवांगम्", "#C0392B", "Conducting syllables and cymbal timekeeping by the guru."],
+  ["Violin", "बेला", "#8E44AD", "Expressive melodic companion to vocalist and dancer."],
+  ["Vocalist", "गायक", "#1A6B8A", "Delivers sahitya that the dancer embodies word-by-word."],
 ];
 
 function initials(name) {
@@ -219,6 +444,10 @@ function initials(name) {
 }
 
 function BharatanatyamPage() {
+  const [activeMargam, setActiveMargam] = useState("Alaripu");
+  const [activeCostume, setActiveCostume] = useState(null);
+  const [activeAbhinaya, setActiveAbhinaya] = useState(null);
+
   useEffect(() => {
     const nodes = Array.from(document.querySelectorAll(".reveal-section"));
     const observer = new IntersectionObserver(
@@ -236,6 +465,11 @@ function BharatanatyamPage() {
     nodes.forEach((node) => observer.observe(node));
     return () => observer.disconnect();
   }, []);
+
+  const activeMargamInfo = margamInfo[activeMargam] || null;
+  const activeMargamItem = margamItems.find((item) => item.name === activeMargam);
+  const activeCostumeItem = costumeItems.find((item) => item.key === activeCostume) || null;
+  const activeAbhinayaItem = abhinayaCards.find((item) => item.key === activeAbhinaya) || null;
 
   return (
     <div className="bharatanatyam-page">
@@ -375,7 +609,13 @@ function BharatanatyamPage() {
         <p className="sanskrit-sub">अभिनय के चार मार्ग</p>
         <div className="abhinaya-grid">
           {abhinayaCards.map((item) => (
-            <article key={item.title} className="abhinaya-card" style={{ "--abhi": item.color }}>
+            <button
+              key={item.title}
+              type="button"
+              className="abhinaya-card"
+              style={{ "--abhi": item.color }}
+              onClick={() => setActiveAbhinaya(item.key)}
+            >
               <div className="abhinaya-icon">{item.icon}</div>
               <h3>{item.title}</h3>
               <p className="sanskrit-inline">{item.sanskrit}</p>
@@ -386,10 +626,49 @@ function BharatanatyamPage() {
                   <span key={tag}>{tag}</span>
                 ))}
               </div>
-            </article>
+            </button>
           ))}
         </div>
       </section>
+
+      {activeAbhinayaItem && (
+        <div className="abhinaya-modal-overlay" onClick={() => setActiveAbhinaya(null)}>
+          <div className="abhinaya-modal" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="abhinaya-modal-close"
+              onClick={() => setActiveAbhinaya(null)}
+              aria-label="Close abhinaya details"
+            >
+              ×
+            </button>
+
+            <div className="abhinaya-modal-image-wrap">
+              <img
+                className="abhinaya-modal-image"
+                src={activeAbhinayaItem.image}
+                alt={`${activeAbhinayaItem.title} visual`}
+                onError={(e) => {
+                  e.currentTarget.src = "/images/image.png";
+                }}
+              />
+            </div>
+
+            <div className="abhinaya-modal-copy">
+              <h3>
+                {activeAbhinayaItem.icon} {activeAbhinayaItem.title}
+              </h3>
+              <p className="sanskrit-inline">{activeAbhinayaItem.sanskrit}</p>
+              <p>{activeAbhinayaItem.detailed}</p>
+              <div className="tag-row">
+                {activeAbhinayaItem.tags.map((tag) => (
+                  <span key={tag}>{tag}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <section className="content-section reveal-section">
         <h2>The Margam — A Complete Recital</h2>
@@ -397,7 +676,13 @@ function BharatanatyamPage() {
         <p className="section-lead">A traditional recital rises in complexity, tempo and emotional intensity from invocation to auspicious close.</p>
         <div className="margam-flow">
           {margamItems.map((item, idx) => (
-            <div key={item.name} className="margam-item" style={{ "--margam": item.color }}>
+            <button
+              key={item.name}
+              type="button"
+              className={`margam-item ${activeMargam === item.name ? "active" : ""}`}
+              style={{ "--margam": item.color }}
+              onClick={() => setActiveMargam(item.name)}
+            >
               <span className="big-num">{item.n}</span>
               <div className="margam-top">
                 <span>{item.icon}</span>
@@ -408,30 +693,110 @@ function BharatanatyamPage() {
               <em>{item.type}</em>
               {item.main && <strong>★ Main Piece</strong>}
               {idx < margamItems.length - 1 && <span className="flow-arrow">→</span>}
-            </div>
+            </button>
           ))}
         </div>
+
+        {activeMargamInfo ? (
+          <article className="margam-detail-card" style={{ "--margam-detail": activeMargamItem?.color || "#D4AF37" }}>
+            <div className="margam-detail-head">
+              <h3>{activeMargam}</h3>
+              <span>{activeMargamInfo.subtitle}</span>
+            </div>
+
+            <p className="margam-detail-meaning">{activeMargamInfo.meaning}</p>
+
+            <h4>Core Understanding</h4>
+            <ul>
+              {activeMargamInfo.details.map((point) => (
+                <li key={point}>{point}</li>
+              ))}
+            </ul>
+
+            <h4>Typical Sequence</h4>
+            <ol>
+              {activeMargamInfo.sequence.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+
+            <h4>Reference Notes</h4>
+            <div className="nadai-pills">
+              {activeMargamInfo.referenceNotes.map((note) => (
+                <span key={note}>{note}</span>
+              ))}
+            </div>
+          </article>
+        ) : (
+          <article className="margam-detail-card muted">
+            <h3>{activeMargam}</h3>
+            <p>Detailed notes for this item will be added soon.</p>
+          </article>
+        )}
       </section>
 
       <section className="content-section reveal-section costume-layout">
         <div>
           <h2>The Costume — आभूषण और वस्त्र</h2>
           <div className="ornament-grid">
-            {ornaments.map(([icon, name, tamil, desc]) => (
-              <article key={name} className="ornament-card">
-                <span>{icon}</span>
-                <h3>{name}</h3>
-                <p className="sanskrit-inline">{tamil}</p>
-                <p>{desc}</p>
-              </article>
+            {costumeItems.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className={`ornament-card ${activeCostume === item.key ? "active" : ""}`}
+                onClick={() => setActiveCostume(item.key)}
+              >
+                <span>{item.icon}</span>
+                <h3>{item.name}</h3>
+                <p className="sanskrit-inline">{item.tamil}</p>
+                <p>{item.short}</p>
+              </button>
             ))}
           </div>
         </div>
         <div className="costume-diagram">
           <img className="costume-image" src="/images/image.png" alt="Bharatanatyam costume diagram" />
-
         </div>
       </section>
+
+      {activeCostumeItem && (
+        <div className="costume-modal-overlay" onClick={() => setActiveCostume(null)}>
+          <div className="costume-modal" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="costume-modal-close"
+              onClick={() => setActiveCostume(null)}
+              aria-label="Close costume details"
+            >
+              ×
+            </button>
+
+            <div className="costume-modal-image-wrap">
+              <img
+                className="costume-modal-image"
+                src={activeCostumeItem.image}
+                alt={`${activeCostumeItem.name} in Bharatanatyam costume`}
+                onError={(e) => {
+                  e.currentTarget.src = "/images/image.png";
+                }}
+              />
+            </div>
+
+            <div className="costume-modal-copy">
+              <h3>
+                {activeCostumeItem.icon} {activeCostumeItem.name}
+              </h3>
+              <p className="sanskrit-inline">{activeCostumeItem.tamil}</p>
+              <p>{activeCostumeItem.description}</p>
+              <ul>
+                {activeCostumeItem.highlights.map((point) => (
+                  <li key={point}>{point}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       <section className="content-section reveal-section">
         <h2>The Masters — गुरु परम्परा</h2>
@@ -491,7 +856,7 @@ function BharatanatyamPage() {
         <div className="hero-ornament">✦ ── 🪷 ── ✦</div>
 
         <div className="cta-grid">
-          <Link to="/" className="cta-card">🎵 Detect Your Tala</Link>
+          <Link to="/detect" className="cta-card">🎵 Detect Your Tala</Link>
           <Link to="/learn" className="cta-card">🎓 Learn the Talas</Link>
           <Link to="/history" className="cta-card">📜 View History</Link>
         </div>

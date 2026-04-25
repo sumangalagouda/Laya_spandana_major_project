@@ -1,8 +1,14 @@
-import React, { useRef, useState } from "react";
-import { Mic, Music, Square, Upload, X } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Headphones, Mic, Music, Square, Upload, X } from "lucide-react";
 import "./AudioUploader.css";
 
 const ACCEPT = ".wav,.aac,.mp3,.flac,.m4a";
+const RECORDING_MIME_TYPES = [
+  "audio/webm;codecs=opus",
+  "audio/webm",
+  "audio/ogg;codecs=opus",
+  "audio/mp4",
+];
 
 function interleaveChannels(left, right) {
   const totalLength = left.length + right.length;
@@ -17,6 +23,17 @@ function interleaveChannels(left, right) {
   }
 
   return result;
+}
+
+function getSupportedRecordingMimeType() {
+  if (typeof MediaRecorder === "undefined" || !MediaRecorder.isTypeSupported) return "";
+  return RECORDING_MIME_TYPES.find((type) => MediaRecorder.isTypeSupported(type)) || "";
+}
+
+function extensionFromMimeType(mimeType) {
+  if (mimeType.includes("ogg")) return "ogg";
+  if (mimeType.includes("mp4")) return "m4a";
+  return "webm";
 }
 
 function floatTo16BitPCM(view, offset, input) {
@@ -36,16 +53,18 @@ function encodeWav(audioBuffer) {
   const numberOfChannels = Math.min(audioBuffer.numberOfChannels, 2);
   const sampleRate = audioBuffer.sampleRate;
   const left = audioBuffer.getChannelData(0);
-  const right = numberOfChannels > 1 ? audioBuffer.getChannelData(1) : left;
-  const interleaved = interleaveChannels(left, right);
+  const pcmData =
+    numberOfChannels > 1
+      ? interleaveChannels(left, audioBuffer.getChannelData(1))
+      : new Float32Array(left);
 
   const bytesPerSample = 2;
   const blockAlign = numberOfChannels * bytesPerSample;
-  const buffer = new ArrayBuffer(44 + interleaved.length * bytesPerSample);
+  const buffer = new ArrayBuffer(44 + pcmData.length * bytesPerSample);
   const view = new DataView(buffer);
 
   writeString(view, 0, "RIFF");
-  view.setUint32(4, 36 + interleaved.length * bytesPerSample, true);
+  view.setUint32(4, 36 + pcmData.length * bytesPerSample, true);
   writeString(view, 8, "WAVE");
   writeString(view, 12, "fmt ");
   view.setUint32(16, 16, true);
@@ -56,8 +75,8 @@ function encodeWav(audioBuffer) {
   view.setUint16(32, blockAlign, true);
   view.setUint16(34, 16, true);
   writeString(view, 36, "data");
-  view.setUint32(40, interleaved.length * bytesPerSample, true);
-  floatTo16BitPCM(view, 44, interleaved);
+  view.setUint32(40, pcmData.length * bytesPerSample, true);
+  floatTo16BitPCM(view, 44, pcmData);
 
   return new Blob([view], { type: "audio/wav" });
 }
@@ -80,9 +99,24 @@ function AudioUploader({ file, setFile }) {
   const [dragOver, setDragOver] = useState(false);
   const [recording, setRecording] = useState(false);
   const [recordTime, setRecordTime] = useState(0);
+  const [audioPreviewUrl, setAudioPreviewUrl] = useState("");
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
   const timerRef = useRef(null);
+
+  useEffect(() => {
+    if (!file) {
+      setAudioPreviewUrl("");
+      return;
+    }
+
+    const nextUrl = URL.createObjectURL(file);
+    setAudioPreviewUrl(nextUrl);
+
+    return () => {
+      URL.revokeObjectURL(nextUrl);
+    };
+  }, [file]);
 
   const onDrop = (event) => {
     event.preventDefault();
@@ -98,7 +132,8 @@ function AudioUploader({ file, setFile }) {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
+      const mimeType = getSupportedRecordingMimeType();
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
       mediaRecorderRef.current = recorder;
       chunksRef.current = [];
       setRecordTime(0);
@@ -108,16 +143,33 @@ function AudioUploader({ file, setFile }) {
       };
 
       recorder.onstop = async () => {
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const recordingType = recorder.mimeType || mimeType || "audio/webm";
+
+        if (!chunksRef.current.length) {
+          alert("No audio was recorded. Please check microphone permissions and try again.");
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+
+        const blob = new Blob(chunksRef.current, { type: recordingType });
+
+        if (!blob.size) {
+          alert("Recorded audio is empty. Please try recording again.");
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+
         try {
           const wavBlob = await toWavBlob(blob);
+          if (!wavBlob.size) throw new Error("Empty WAV output");
           const recordedFile = new File([wavBlob], `recording-${Date.now()}.wav`, {
             type: "audio/wav",
           });
           setFile(recordedFile);
         } catch {
-          const fallbackFile = new File([blob], `recording-${Date.now()}.webm`, {
-            type: "audio/webm",
+          const fallbackExtension = extensionFromMimeType(recordingType);
+          const fallbackFile = new File([blob], `recording-${Date.now()}.${fallbackExtension}`, {
+            type: recordingType,
           });
           setFile(fallbackFile);
         } finally {
@@ -125,7 +177,7 @@ function AudioUploader({ file, setFile }) {
         }
       };
 
-      recorder.start();
+      recorder.start(250);
       setRecording(true);
       timerRef.current = setInterval(() => setRecordTime((prev) => prev + 1), 1000);
     } catch {
@@ -135,6 +187,9 @@ function AudioUploader({ file, setFile }) {
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && recording) {
+      if (mediaRecorderRef.current.state !== "inactive") {
+        mediaRecorderRef.current.requestData();
+      }
       mediaRecorderRef.current.stop();
       setRecording(false);
       clearInterval(timerRef.current);
@@ -171,13 +226,34 @@ function AudioUploader({ file, setFile }) {
       </div>
 
       {file && (
-        <div className="selected-file">
-          <span>{file.name}</span>
-          <small>{(file.size / 1024).toFixed(1)} KB</small>
-          <button onClick={clearFile} className="clear-btn" type="button">
-            <X size={16} />
-          </button>
-        </div>
+        <>
+          <div className="selected-file">
+            <span>{file.name}</span>
+            <small>{(file.size / 1024).toFixed(1)} KB</small>
+            <button onClick={clearFile} className="clear-btn" type="button">
+              <X size={16} />
+            </button>
+          </div>
+
+          {audioPreviewUrl && (
+            <div className="preview-player">
+              <div className="preview-head">
+                <span className="preview-label">
+                  <Headphones size={15} /> Audio Preview
+                </span>
+                <span className="preview-ready">Ready to detect</span>
+              </div>
+
+              <div className="preview-wave" aria-hidden="true">
+                {Array.from({ length: 16 }).map((_, idx) => (
+                  <span key={idx} className="preview-bar" style={{ animationDelay: `${idx * 0.08}s` }} />
+                ))}
+              </div>
+
+              <audio controls src={audioPreviewUrl} preload="metadata" className="preview-audio" />
+            </div>
+          )}
+        </>
       )}
 
       <div className="or-divider">या / or</div>

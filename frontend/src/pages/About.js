@@ -4,34 +4,28 @@ import "./About.css";
 
 const NADAIS = [
   {
-    beats: 3,
     color: "#D4AF37",
     name: "Tishra Nadai",
     tamil: "திஸ்ர நடை",
     meaning: "Triplet Flow",
     paragraph:
       "Tishra Nadai opens space for meditative expansion. The threefold pulse carries devotional intent and a wave-like inner breath through eye, neck, and torso transitions.",
-    chips: ["Ta", "Ki", "Ta"],
   },
   {
-    beats: 4,
     color: "#C0392B",
     name: "Chatusra Nadai",
     tamil: "சதுஸ்ர நடை",
     meaning: "Balanced Four",
     paragraph:
       "Chatusra Nadai is the foundational square of Bharatanatyam rhythm. It holds proportion, symmetry, and pedagogical clarity across beginner and advanced Alaripu renderings.",
-    chips: ["Ta", "Ka", "Di", "Mi"],
   },
   {
-    beats: 5,
     color: "#1A6B8A",
     name: "Kandam Nadai",
     tamil: "கண்ட நடை",
     meaning: "Dynamic Five",
     paragraph:
       "Kandam Nadai introduces asymmetrical strength and dramatic velocity. Its five-beat architecture demands deep internal counting and precise articulation of angular energy.",
-    chips: ["Ta", "Ka", "Ta", "Ki", "Ta"],
   },
 ];
 
@@ -62,17 +56,11 @@ function About() {
         <h2>The Three Nadais of Alaripu</h2>
         {NADAIS.map((item) => (
           <article key={item.name} className="nadai-item" style={{ "--nadai-color": item.color }}>
-            <div className="beat-box">{item.beats}</div>
             <div className="nadai-text">
               <h3>{item.name}</h3>
               <p className="tamil">{item.tamil}</p>
               <p className="meaning">{item.meaning}</p>
               <p>{item.paragraph}</p>
-              <div className="chip-row">
-                {item.chips.map((chip, idx) => (
-                  <span key={`${chip}-${idx}`}>{chip}</span>
-                ))}
-              </div>
             </div>
           </article>
         ))}

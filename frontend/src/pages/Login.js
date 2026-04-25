@@ -21,7 +21,7 @@ function Login() {
       const { data } = await api.post("/api/auth/login", { email, password });
       login(data.token, data.user);
       toast.success("Welcome back.");
-      navigate("/");
+      navigate("/bharatanatyam");
     } catch (err) {
       const msg = err?.response?.data?.error || "Login failed";
       setError(msg);

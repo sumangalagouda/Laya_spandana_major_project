@@ -84,22 +84,9 @@
 
 .nadai-item {
   margin-top: 0.8rem;
-  display: grid;
-  grid-template-columns: 72px 1fr;
-  gap: 0.8rem;
+  display: block;
   border-left: 2px solid var(--nadai-color);
   padding-left: 0.8rem;
-}
-
-.beat-box {
-  width: 62px;
-  height: 62px;
-  border-radius: 10px;
-  border: 1px solid var(--nadai-color);
-  color: var(--nadai-color);
-  display: grid;
-  place-items: center;
-  font-size: 1.4rem;
 }
 
 .nadai-text h3 {
@@ -112,18 +99,6 @@
   color: var(--text-muted);
 }
 
-.chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.chip-row span {
-  border-radius: 999px;
-  border: 1px solid rgba(212,175,55,0.35);
-  color: var(--gold-light);
-  padding: 0.2rem 0.55rem;
-}
 
 .tech-cards {
   margin-top: 0.8rem;
@@ -181,10 +156,6 @@
 
 @media (max-width: 620px) {
   .tech-cards {
-    grid-template-columns: 1fr;
-  }
-
-  .nadai-item {
     grid-template-columns: 1fr;
   }
 }

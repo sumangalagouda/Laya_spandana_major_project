@@ -9,6 +9,7 @@ function TalaResult({ result }) {
 
   const tala = result?.tala_info || {};
   const predicted = result?.predicted || "chatusra";
+  const isUnknown = predicted === "unknown" || result?.not_detected;
   const confidencePct = Math.round((result?.confidence || 0) * 100);
   const scores = result?.scores || {};
 
@@ -41,55 +42,58 @@ function TalaResult({ result }) {
           <p className="lang-line tamil">{tala.tamil}</p>
         </div>
 
-        <div className="confidence-ring glow-pulse">
-          <svg width="110" height="110" viewBox="0 0 110 110">
-            <circle cx="55" cy="55" r={radius} className="ring-bg" />
-            <circle
-              cx="55"
-              cy="55"
-              r={radius}
-              className="ring-progress"
-              style={{
-                strokeDasharray: circumference,
-                strokeDashoffset: dashOffset,
-                stroke: tala.color || "#D4AF37",
-              }}
-            />
-          </svg>
-          <span>{confidencePct}%</span>
-        </div>
+        {!isUnknown && (
+          <div className="confidence-ring glow-pulse">
+            <svg width="110" height="110" viewBox="0 0 110 110">
+              <circle cx="55" cy="55" r={radius} className="ring-bg" />
+              <circle
+                cx="55"
+                cy="55"
+                r={radius}
+                className="ring-progress"
+                style={{
+                  strokeDasharray: circumference,
+                  strokeDashoffset: dashOffset,
+                  stroke: tala.color || "#D4AF37",
+                }}
+              />
+            </svg>
+            <span>{confidencePct}%</span>
+          </div>
+        )}
       </div>
 
       <div className="divider-line" />
 
-      <div className="beat-visualiser">
-        {Array.from({ length: tala.beats || 0 }).map((_, idx) => (
-          <div key={idx} className="beat-circle" style={{ borderColor: tala.color || "#D4AF37" }}>
-            {idx + 1}
-          </div>
-        ))}
-      </div>
-
-      <div className="score-bars">
-        {scoreItems.map((item) => {
-          const active = predicted === item.key;
-          return (
-            <div key={item.key} className="score-row">
-              <label>{item.label}</label>
-              <div className="score-track">
-                <div
-                  className={`score-fill ${active ? "active" : ""}`}
-                  style={{
-                    width: `${Math.round(item.value * 100)}%`,
-                    background: active ? item.color : "rgba(212,175,55,0.24)",
-                  }}
-                />
+      {!isUnknown && (
+        <div className="score-bars">
+          {scoreItems.map((item) => {
+            const active = predicted === item.key;
+            return (
+              <div key={item.key} className="score-row">
+                <label>{item.label}</label>
+                <div className="score-track">
+                  <div
+                    className={`score-fill ${active ? "active" : ""}`}
+                    style={{
+                      width: `${Math.round(item.value * 100)}%`,
+                      background: active ? item.color : "rgba(212,175,55,0.24)",
+                    }}
+                  />
+                </div>
+                <span>{Math.round(item.value * 100)}%</span>
               </div>
-              <span>{Math.round(item.value * 100)}%</span>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
+
+      {isUnknown && (
+        <div className="unknown-note">
+          Could not confidently detect Tishra, Chatusra, or Kandam from this audio.
+          Please upload a clearer rhythmic sample.
+        </div>
+      )}
 
       <div className="tabs-row">
         {TABS.map((tab) => (
