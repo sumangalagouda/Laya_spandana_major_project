@@ -380,11 +380,11 @@ function LearnTalas() {
       <section className="learn-hero">
         <div className="learn-mandala" />
         <div className="learn-om">ॐ</div>
-        <h1>Learn Alaripu Talas</h1>
+        <h1>Learn Bharatanatyam Talas</h1>
         <p className="hero-sanskrit">शिक्षा</p>
         <p className="hero-text">
           Listen to the authentic recitation of each nadai, follow the syllables, and watch the
-          dance to master the three talas of Alaripu
+          dance to master the three talas of Bharatanatyam
         </p>
         <div className="hero-stat-pills">
           <span><strong>3</strong> Talas to Learn</span>

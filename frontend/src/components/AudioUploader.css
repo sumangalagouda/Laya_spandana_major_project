@@ -173,20 +173,6 @@
   cursor: pointer;
 }
 
-.or-divider {
-  margin: 0.95rem 0;
-  text-align: center;
-  color: var(--gold-light);
-  font-family: "Tiro Devanagari Sanskrit", serif;
-}
-
-.record-row {
-  display: flex;
-  justify-content: center;
-}
-
-.record-btn,
-.stop-btn,
 .browse-btn {
   border-radius: 999px;
   border: 1px solid var(--gold);
@@ -197,29 +183,6 @@
   align-items: center;
   gap: 0.4rem;
   cursor: pointer;
-}
-
-.stop-btn {
-  border-color: var(--deep-red);
-  color: var(--deep-red);
-}
-
-.waveform-wrap {
-  margin: 0.8rem auto;
-  display: flex;
-  gap: 0.35rem;
-  justify-content: center;
-  align-items: flex-end;
-  height: 30px;
-}
-
-.wave-bar {
-  width: 6px;
-  height: 100%;
-  border-radius: 3px;
-  background: linear-gradient(var(--gold), var(--saffron));
-  animation: waveform 0.9s ease-in-out infinite;
-  transform-origin: bottom;
 }
 
 .browse-btn {

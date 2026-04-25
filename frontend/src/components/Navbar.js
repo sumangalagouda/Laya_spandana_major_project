@@ -12,7 +12,7 @@ function Navbar() {
   return (
     <header className="navbar">
       <div className="nav-brand" onClick={() => navigate("/")} role="button" tabIndex={0}>
-        <span className="om-icon">ॐ</span>
+        <img className="nav-logo" src="/images/laya-logo.png" alt="Laya Spandana logo" />
         <div>
           <h1>Laya Spandana</h1>
           <p>Bharatanatyam Alaripu</p>

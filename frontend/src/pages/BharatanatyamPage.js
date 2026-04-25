@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "./BharatanatyamPage.css";
 
@@ -415,38 +415,178 @@ const exponents = [
 ];
 
 const rasas = [
-  [ "Shringara", "श्रृंगार", "சிங்காரம்", "Love/Beauty", "#C0392B", "Graceful romantic and devotional expression."],
-  [ "Hasya", "हास्य", "ஹாஸ்யம்", "Joy/Humor", "#F39C12", "Playful brightness and comic charm."],
-  ["Karuna", "करुण", "கருணை", "Compassion/Sorrow", "#2980B9", "Slow gestures and tender emotional weight."],
-  ["Raudra", "रौद्र", "ரௌத்ரம்", "Fury/Anger", "#E74C3C", "Forceful stance and fierce energy."],
-  ["Vira", "वीर", "வீரம்", "Heroism/Courage", "#D4AF37", "Upright power and resolute rhythm."],
-  ["Bhayanaka", "भयानक", "பயானகம்", "Terror/Fear", "#5D4037", "Tension, recoil, and trembling anticipation."],
-  ["Bibhatsa", "बीभत्स", "பீபத்ஸம்", "Disgust", "#616161", "Repulsion shown through withdrawal."],
-  ["Adbhuta", "अद्भुत", "அத்புதம்", "Wonder", "#8E44AD", "Astonishment before divine marvel."],
-  ["Shanta", "शांत", "சாந்தம்", "Serenity", "#1A6B8A", "Stillness and meditative resolution."],
+  {
+    name: "Shringara",
+    sanskrit: "श्रृंगार",
+    tamil: "சிங்காரம்",
+    meaning: "Love and Beauty",
+    color: "#C0392B",
+    image: "/images/rasa-shringara.jpg",
+    desc: "Romantic and devotional grace expressed through soft eyes, gentle smile, and fluid body lines.",
+    expressionCue: "Ideal for nayika-nayaka bhava and divine love compositions.",
+  },
+  {
+    name: "Hasya",
+    sanskrit: "हास्य",
+    tamil: "ஹாஸ்யம்",
+    meaning: "Joy and Humor",
+    color: "#F39C12",
+    image: "/images/rasa-hasya.jpg",
+    desc: "Light playful mood with bright face, lifted brows, and animated cheek expression.",
+    expressionCue: "Works beautifully in teasing exchanges and witty abhinaya moments.",
+  },
+  {
+    name: "Karuna",
+    sanskrit: "करुण",
+    tamil: "கருணை",
+    meaning: "Compassion and Sorrow",
+    color: "#2980B9",
+    image: "/images/rasa-karuna.jpg",
+    desc: "Tender sadness shown with slower pace, lowered gaze, and weighted stillness.",
+    expressionCue: "Used in viraha, lament, and maternal compassion narratives.",
+  },
+  {
+    name: "Raudra",
+    sanskrit: "रौद्र",
+    tamil: "ரௌத்ரம்",
+    meaning: "Fury and Wrath",
+    color: "#E74C3C",
+    image: "/images/rasa-raudra.jpg",
+    desc: "Explosive force conveyed through sharp lines, intense drishti, and commanding stance.",
+    expressionCue: "Suited for warrior episodes and destructive divine manifestations.",
+  },
+  {
+    name: "Vira",
+    sanskrit: "वीर",
+    tamil: "வீரம்",
+    meaning: "Heroism and Courage",
+    color: "#D4AF37",
+    image: "/images/rasa-vira.jpg",
+    desc: "Steady confidence marked by upright torso, expansive chest, and decisive movement.",
+    expressionCue: "Common in victory, vow-taking, and dharmic protection themes.",
+  },
+  {
+    name: "Bhayanaka",
+    sanskrit: "भयानक",
+    tamil: "பயானகம்",
+    meaning: "Fear and Dread",
+    color: "#5D4037",
+    image: "/images/rasa-bhayanaka.jpg",
+    desc: "Anxious tension appears through recoiling body, widened eyes, and unstable breath rhythm.",
+    expressionCue: "Appears in scenes of danger, omens, or uncertain destiny.",
+  },
+  {
+    name: "Bibhatsa",
+    sanskrit: "बीभत्स",
+    tamil: "பீபத்ஸம்",
+    meaning: "Disgust and Aversion",
+    color: "#616161",
+    image: "/images/rasa-bibhatsa.jpg",
+    desc: "Repulsion shown through withdrawal, contracted features, and resistant body direction.",
+    expressionCue: "Used where moral rejection or physical aversion is emphasized.",
+  },
+  {
+    name: "Adbhuta",
+    sanskrit: "अद्भुत",
+    tamil: "அத்புதம்",
+    meaning: "Wonder and Awe",
+    color: "#8E44AD",
+    image: "/images/rasa-adbhuta.jpg",
+    desc: "Astonishment blooms with lifted gaze, softened jaw, and expanding gesture space.",
+    expressionCue: "Powerful in divine darshan, miracles, and revelation sequences.",
+  },
+  {
+    name: "Shanta",
+    sanskrit: "शांत",
+    tamil: "சாந்தம்",
+    meaning: "Peace and Serenity",
+    color: "#1A6B8A",
+    image: "/images/rasa-shanta.jpg",
+    desc: "Calm equilibrium expressed through minimal movement, deep breath, and meditative focus.",
+    expressionCue: "Often closes journeys with inner resolution and spiritual stillness.",
+  },
 ];
 
-const instruments = [
-  ["Mridangam", "मृदंगम्", "#D4AF37", "The rhythmic backbone responding to footwork in real time."],
-  ["Veena", "वीणा", "#FF6B00", "Deep resonant melodic frame for raga expression."],
-  [ "Flute (Venu)", "वेणु", "#27AE60", "Breath-driven timbre ideal for lyrical passages."],
-  ["Nattuvangam", "नट्टुवांगम्", "#C0392B", "Conducting syllables and cymbal timekeeping by the guru."],
-  ["Violin", "बेला", "#8E44AD", "Expressive melodic companion to vocalist and dancer."],
-  ["Vocalist", "गायक", "#1A6B8A", "Delivers sahitya that the dancer embodies word-by-word."],
+const orchestraInstruments = [
+  {
+    key: "vocalist",
+    label: "Vocalist",
+    sanskrit: "गायक",
+    color: "#1A6B8A",
+    top: "22%",
+    left: "9%",
+    details:
+      "Leads sahitya and melodic phrasing. The dancer mirrors lyric emotion, accent, and bhava from the vocalist line.",
+  },
+  {
+    key: "veena",
+    label: "Veena",
+    sanskrit: "वीणा",
+    color: "#FF6B00",
+    top: "26%",
+    left: "30%",
+    details:
+      "Provides rich gamaka texture and classical melodic depth, supporting expressive transitions in abhinaya passages.",
+  },
+  {
+    key: "flute",
+    label: "Flute",
+    sanskrit: "वेणु",
+    color: "#27AE60",
+    top: "20%",
+    left: "47%",
+    details:
+      "Adds breath-driven lyrical continuity, often shaping fluid emotional moments and softer movement phrases.",
+  },
+  {
+    key: "violin",
+    label: "Violin",
+    sanskrit: "बेला",
+    color: "#8E44AD",
+    top: "22%",
+    left: "61%",
+    details:
+      "Supports and extends the melody with sustained tonal color, bridging voice and rhythm across dance sections.",
+  },
+  {
+    key: "mridangam",
+    label: "Mridangam",
+    sanskrit: "मृदंगम्",
+    color: "#D4AF37",
+    top: "20%",
+    left: "76%",
+    details:
+      "Primary percussion engine for tala structure. Footwork dialogue between dancer and mridangist drives performance energy.",
+  },
+  {
+    key: "nattuvangam",
+    label: "Nattuvangam",
+    sanskrit: "नट्टुवांगम्",
+    color: "#C0392B",
+    top: "20%",
+    left: "92%",
+    details:
+      "Cymbal cues and rhythmic syllables from the conductor anchor precision, transitions, and choreography timing.",
+  },
+  {
+    key: "harmonium",
+    label: "Harmonium",
+    sanskrit: "हार्मोनियम",
+    color: "#5D4037",
+    top: "85%",
+    left: "30%",
+    details:
+      "Reinforces pitch support and drone-like tonal grounding, especially in vocal passages and interpretive segments.",
+  },
 ];
-
-function initials(name) {
-  return name
-    .split(" ")
-    .map((x) => x[0])
-    .slice(0, 2)
-    .join("");
-}
 
 function BharatanatyamPage() {
   const [activeMargam, setActiveMargam] = useState("Alaripu");
   const [activeCostume, setActiveCostume] = useState(null);
   const [activeAbhinaya, setActiveAbhinaya] = useState(null);
+  const [activeRasaIndex, setActiveRasaIndex] = useState(1);
+  const [activeOrchestra, setActiveOrchestra] = useState("mridangam");
+  const rasaLaneRef = useRef(null);
 
   useEffect(() => {
     const nodes = Array.from(document.querySelectorAll(".reveal-section"));
@@ -466,10 +606,74 @@ function BharatanatyamPage() {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    const timelineNodes = Array.from(document.querySelectorAll(".timeline-item"));
+    if (!timelineNodes.length) return undefined;
+
+    const timelineObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("timeline-in-view");
+            timelineObserver.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.35, rootMargin: "0px 0px -8% 0px" }
+    );
+
+    timelineNodes.forEach((node) => timelineObserver.observe(node));
+    return () => timelineObserver.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const lane = rasaLaneRef.current;
+    if (!lane) return undefined;
+
+    const cards = Array.from(lane.querySelectorAll(".rasa-card"));
+    if (!cards.length) return undefined;
+
+    const updateActiveCard = () => {
+      const laneRect = lane.getBoundingClientRect();
+      const laneCenter = laneRect.left + laneRect.width / 2;
+      let nearestIndex = 0;
+      let nearestDistance = Number.POSITIVE_INFINITY;
+
+      cards.forEach((card, index) => {
+        const cardRect = card.getBoundingClientRect();
+        const cardCenter = cardRect.left + cardRect.width / 2;
+        const distance = Math.abs(cardCenter - laneCenter);
+
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearestIndex = index;
+        }
+      });
+
+      setActiveRasaIndex((current) => (current === nearestIndex ? current : nearestIndex));
+    };
+
+    const hasyaCard = cards[1];
+    if (hasyaCard) {
+      const targetLeft = hasyaCard.offsetLeft + hasyaCard.offsetWidth / 2 - lane.clientWidth / 2;
+      lane.scrollTo({ left: Math.max(targetLeft, 0), behavior: "auto" });
+    }
+
+    updateActiveCard();
+    lane.addEventListener("scroll", updateActiveCard, { passive: true });
+    window.addEventListener("resize", updateActiveCard);
+
+    return () => {
+      lane.removeEventListener("scroll", updateActiveCard);
+      window.removeEventListener("resize", updateActiveCard);
+    };
+  }, []);
+
   const activeMargamInfo = margamInfo[activeMargam] || null;
   const activeMargamItem = margamItems.find((item) => item.name === activeMargam);
   const activeCostumeItem = costumeItems.find((item) => item.key === activeCostume) || null;
   const activeAbhinayaItem = abhinayaCards.find((item) => item.key === activeAbhinaya) || null;
+  const activeOrchestraItem = orchestraInstruments.find((item) => item.key === activeOrchestra) || null;
 
   return (
     <div className="bharatanatyam-page">
@@ -558,12 +762,15 @@ function BharatanatyamPage() {
         <p className="sanskrit-sub">इतिहास</p>
         <div className="timeline">
           {timelineEvents.map((event, idx) => (
-            <article key={event.title} className={`timeline-item ${idx % 2 === 0 ? "left" : "right"}`}>
+            <article
+              key={event.title}
+              className={`timeline-item ${idx % 2 === 0 ? "left" : "right"}`}
+              style={{ "--tl-index": idx }}
+            >
               <span className="timeline-dot" style={{ background: event.color, boxShadow: `0 0 14px ${event.color}` }} />
               <div className="timeline-card" style={{ "--evt-color": event.color }}>
                 <div className="timeline-top">
                   <span className="year-pill">{event.year}</span>
-                  <span className="event-icon">{event.icon}</span>
                 </div>
                 <h3>{event.title}</h3>
                 <p>{event.description}</p>
@@ -616,7 +823,17 @@ function BharatanatyamPage() {
               style={{ "--abhi": item.color }}
               onClick={() => setActiveAbhinaya(item.key)}
             >
-              <div className="abhinaya-icon">{item.icon}</div>
+              <div className="abhinaya-icon">
+                <img
+                  className="abhinaya-icon-image"
+                  src={item.image}
+                  alt={`${item.title} visual`}
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.src = "/images/image.png";
+                  }}
+                />
+              </div>
               <h3>{item.title}</h3>
               <p className="sanskrit-inline">{item.sanskrit}</p>
               <p className="abhi-sub">{item.subtitle}</p>
@@ -799,35 +1016,35 @@ function BharatanatyamPage() {
       )}
 
       <section className="content-section reveal-section">
-        <h2>The Masters — गुरु परम्परा</h2>
-        <p className="section-lead">Artists who shaped the tradition</p>
-        <div className="person-cards">
-          {exponents.map((p) => (
-            <article key={p.name} className="person-card" style={{ "--person": p.color }}>
-              <div className="avatar">{initials(p.name)}</div>
-              <h3>{p.name}</h3>
-              <small>{p.years}</small>
-              <span className="role-pill">{p.role}</span>
-              <p>{p.contribution}</p>
-              <blockquote>{p.quote}</blockquote>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="content-section reveal-section">
         <h2>Navarasas — The Nine Emotions</h2>
         <p className="sanskrit-sub">नव रस</p>
         <p className="section-lead">Rasa is the emotional essence awakened in the audience through dance, music, and expression.</p>
-        <div className="rasa-grid">
-          {rasas.map(([emoji, name, sanskrit, tamil, meaning, color, desc], i) => (
-            <article key={name} className="rasa-card" style={{ "--rasa": color }}>
+        <div className="rasa-grid" ref={rasaLaneRef}>
+          {rasas.map((rasa, i) => (
+            <article
+              key={rasa.name}
+              className={`rasa-card ${
+                i === activeRasaIndex ? "is-active" : Math.abs(i - activeRasaIndex) === 1 ? "is-near" : "is-far"
+              }`}
+              style={{ "--rasa": rasa.color }}
+            >
               <span className="rasa-num">{i + 1}</span>
-              <div className="rasa-emoji">{emoji}</div>
-              <h3>{name}</h3>
-              <p className="sanskrit-inline">{sanskrit} · {tamil}</p>
-              <small>{meaning}</small>
-              <p>{desc}</p>
+              <div className="rasa-image-wrap">
+                <img
+                  className="rasa-image"
+                  src={rasa.image}
+                  alt={`${rasa.name} expression in Bharatanatyam`}
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.src = "/images/image.png";
+                  }}
+                />
+              </div>
+              <h3>{rasa.name}</h3>
+              <p className="sanskrit-inline">{rasa.sanskrit} · {rasa.tamil}</p>
+              <small>{rasa.meaning}</small>
+              <p>{rasa.desc}</p>
+              <p className="rasa-cue">{rasa.expressionCue}</p>
             </article>
           ))}
         </div>
@@ -835,14 +1052,55 @@ function BharatanatyamPage() {
 
       <section className="content-section reveal-section">
         <h2>The Orchestra — वाद्य यंत्र</h2>
-        <p className="section-lead">Instruments of a Bharatanatyam performance</p>
-        <div className="instrument-grid">
-          {instruments.map(([emoji, name, sanskrit, color, desc]) => (
-            <article key={name} className="instrument-card" style={{ "--inst": color }}>
-              <span>{emoji}</span>
-              <h3>{name}</h3>
-              <p className="sanskrit-inline">{sanskrit}</p>
-              <p>{desc}</p>
+        <p className="section-lead">Hover or click labels on the image to explore each orchestra role.</p>
+        <div className="orchestra-map-wrap">
+          <div className="orchestra-map">
+            <img
+              className="orchestra-image"
+              src="/images/orchestra-group.jpg"
+              alt="Bharatanatyam live orchestra with instrument labels"
+              onError={(e) => {
+                e.currentTarget.src = "/images/nataraja.png";
+              }}
+            />
+
+            {orchestraInstruments.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className={`orchestra-label ${activeOrchestra === item.key ? "active" : ""}`}
+                style={{ "--inst": item.color, top: item.top, left: item.left }}
+                onMouseEnter={() => setActiveOrchestra(item.key)}
+                onFocus={() => setActiveOrchestra(item.key)}
+                onClick={() => setActiveOrchestra(item.key)}
+                aria-label={`${item.label} details`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          {activeOrchestraItem && (
+            <article className="orchestra-detail" style={{ "--inst": activeOrchestraItem.color }}>
+              <h3>{activeOrchestraItem.label}</h3>
+              <p className="sanskrit-inline">{activeOrchestraItem.sanskrit}</p>
+              <p>{activeOrchestraItem.details}</p>
+            </article>
+          )}
+        </div>
+      </section>
+
+      <section className="content-section reveal-section">
+        <h2>The Masters — गुरु परम्परा</h2>
+        <p className="section-lead">Artists who shaped the tradition</p>
+        <div className="person-cards">
+          {exponents.map((p) => (
+            <article key={p.name} className="person-card" style={{ "--person": p.color }}>
+              <h3>{p.name}</h3>
+              <small>{p.years}</small>
+              <span className="role-pill">{p.role}</span>
+              <p>{p.contribution}</p>
+              <blockquote>{p.quote}</blockquote>
             </article>
           ))}
         </div>

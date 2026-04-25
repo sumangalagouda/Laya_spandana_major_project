@@ -5,8 +5,13 @@
 }
 
 .about-hero,
+.project-features,
+.project-impact,
+.project-workflow,
 .nadai-timeline,
-.ai-works {
+.ai-works,
+.module-coverage,
+.project-summary {
   border: 1px solid rgba(212,175,55,0.3);
   background: var(--dark-2);
   border-radius: 18px;
@@ -15,8 +20,13 @@
 }
 
 .about-hero::before,
+.project-features::before,
+.project-impact::before,
+.project-workflow::before,
 .nadai-timeline::before,
-.ai-works::before {
+.ai-works::before,
+.module-coverage::before,
+.project-summary::before {
   content: "";
   position: absolute;
   top: 0;
@@ -34,8 +44,13 @@
 }
 
 .about-hero h1,
+.project-features h2,
+.project-impact h2,
+.project-workflow h2,
 .nadai-timeline h2,
-.ai-works h2 {
+.ai-works h2,
+.module-coverage h2,
+.project-summary h2 {
   text-align: center;
   font-family: "Yatra One", serif;
   color: var(--gold-light);
@@ -52,6 +67,51 @@
 .intro-grid p {
   color: var(--cream);
   line-height: 1.65;
+}
+
+.feature-grid,
+.impact-grid,
+.module-grid {
+  margin-top: 0.8rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.8rem;
+}
+
+.feature-card,
+.impact-card,
+.module-grid article {
+  border: 1px solid rgba(212,175,55,0.26);
+  border-radius: 12px;
+  padding: 0.85rem;
+  background: var(--dark-3);
+}
+
+.feature-card h3,
+.module-grid h3 {
+  margin: 0;
+  color: var(--gold-light);
+  font-size: 1.05rem;
+}
+
+.feature-card p,
+.impact-card p,
+.module-grid p,
+.project-summary p,
+.workflow-list li {
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+
+.impact-card p {
+  margin: 0;
+}
+
+.workflow-list {
+  margin: 0.8rem 0 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.55rem;
 }
 
 .lotus-mandala {
@@ -144,17 +204,28 @@
   display: inline-block;
 }
 
+.project-summary p {
+  margin-top: 0.8rem;
+  text-align: center;
+}
+
 @media (max-width: 960px) {
   .intro-grid {
     grid-template-columns: 1fr;
   }
 
+  .feature-grid,
+  .impact-grid,
+  .module-grid,
   .tech-cards {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 620px) {
+  .feature-grid,
+  .impact-grid,
+  .module-grid,
   .tech-cards {
     grid-template-columns: 1fr;
   }

@@ -49,10 +49,10 @@ function Home() {
       >
         <div className="hero-mandala" />
         <div className="hero-om">ॐ</div>
-        <h1>Alaripu</h1>
+        <h1>Bharatanatyam</h1>
         <h2>Tala Detector</h2>
         <p>
-          Upload or record an audio sample to detect Bharatanatyam Alaripu nadai patterns across
+          Upload an audio sample to detect Bharatanatyam nadai patterns across
           Tishra, Chatusra, and Kandam cycles.
         </p>
         <div className="tala-pills">
