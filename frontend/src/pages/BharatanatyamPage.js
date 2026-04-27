@@ -586,6 +586,7 @@ function BharatanatyamPage() {
   const [activeAbhinaya, setActiveAbhinaya] = useState(null);
   const [activeRasaIndex, setActiveRasaIndex] = useState(1);
   const [activeOrchestra, setActiveOrchestra] = useState("mridangam");
+  const [heroNatarajaRotation, setHeroNatarajaRotation] = useState(0);
   const rasaLaneRef = useRef(null);
 
   useEffect(() => {
@@ -675,6 +676,13 @@ function BharatanatyamPage() {
   const activeAbhinayaItem = abhinayaCards.find((item) => item.key === activeAbhinaya) || null;
   const activeOrchestraItem = orchestraInstruments.find((item) => item.key === activeOrchestra) || null;
 
+  const handleHeroModelScroll = (event) => {
+    const { scrollLeft, scrollWidth, clientWidth } = event.currentTarget;
+    const maxScroll = Math.max(scrollWidth - clientWidth, 1);
+    const progress = scrollLeft / maxScroll;
+    setHeroNatarajaRotation(progress * 1080);
+  };
+
   return (
     <div className="bharatanatyam-page">
       <section className="hero-section">
@@ -697,7 +705,22 @@ function BharatanatyamPage() {
         <div className="hero-content">
           <div className="hero-ornament">✦ ── ✦ ── 🪷 ── ✦ ── ✦</div>
           <p className="hero-invocation">नटराजाय नमः</p>
-          <h1 className="text-gradient">Bharatanatyam</h1>
+          <div
+            className="hero-scroll-model"
+            onScroll={handleHeroModelScroll}
+            aria-label="Horizontal scroll model to rotate Nataraja"
+          >
+            <div className="hero-scroll-model-track">
+              <span className="hero-scroll-gap" aria-hidden="true" />
+              <img
+                className="hero-nataraja-model"
+                src="/images/nataraja.png"
+                alt="Nataraja rotating with horizontal scroll"
+                style={{ transform: `rotateY(${heroNatarajaRotation}deg)` }}
+              />
+              <span className="hero-scroll-gap" aria-hidden="true" />
+            </div>
+          </div>
           <p className="hero-tamil">பரதநாட்டியம்</p>
           <p className="hero-tagline">The Divine Language of Body, Music and Devotion</p>
           <div className="hero-pills">

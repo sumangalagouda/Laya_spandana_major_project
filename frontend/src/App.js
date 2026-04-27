@@ -9,21 +9,30 @@ import History from "./pages/History";
 import Home from "./pages/Home";
 import LearnTalas from "./pages/LearnTalas";
 import Login from "./pages/Login";
+import NatarajaLandingEmbed from "./pages/NatarajaLandingEmbed";
 import Register from "./pages/Register";
 import "./App.css";
 
 function App() {
   const location = useLocation();
-  const hideNavbar = location.pathname === "/login" || location.pathname === "/register";
+  const hideNavbar =
+    location.pathname === "/" ||
+    location.pathname === "/login" ||
+    location.pathname === "/register";
+  const mainClassName = hideNavbar
+    ? location.pathname === "/"
+      ? "page-main landing-main"
+      : "page-main auth-main"
+    : "page-main";
 
   return (
     <div className="app-shell">
       {!hideNavbar && <Navbar />}
-      <main className={hideNavbar ? "page-main auth-main" : "page-main"}>
+      <main className={mainClassName}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/" element={<BharatanatyamPage />} />
+          <Route path="/" element={<NatarajaLandingEmbed />} />
           <Route
             path="/detect"
             element={
@@ -49,7 +58,14 @@ function App() {
             }
           />
           <Route path="/about" element={<About />} />
-          <Route path="/bharatanatyam" element={<BharatanatyamPage />} />
+          <Route
+            path="/bharatanatyam"
+            element={
+              <ProtectedRoute>
+                <BharatanatyamPage />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

@@ -22,17 +22,22 @@ function Navbar() {
       <div className="nav-center-line">✦ ✦ ✦</div>
 
       <nav className="nav-links">
-        <NavLink to="/detect">Detect</NavLink>
-        <NavLink to="/learn">🎓 Learn</NavLink>
-        <NavLink to="/history">History</NavLink>
         <NavLink to="/about">About</NavLink>
-        <NavLink to="/bharatanatyam"> Bharatanatyam</NavLink>
-        {isAuthenticated && (
+        {isAuthenticated ? (
           <>
+            <NavLink to="/detect">Detect</NavLink>
+            <NavLink to="/learn">🎓 Learn</NavLink>
+            <NavLink to="/history">History</NavLink>
+            <NavLink to="/bharatanatyam">Bharatanatyam</NavLink>
             <span className="avatar-circle">{avatarLetter}</span>
             <button className="logout-btn" onClick={logout}>
               Logout
             </button>
+          </>
+        ) : (
+          <>
+            <NavLink to="/login">Sign In</NavLink>
+            <NavLink to="/register">Sign Up</NavLink>
           </>
         )}
       </nav>

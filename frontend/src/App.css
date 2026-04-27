@@ -16,6 +16,11 @@
   max-width: none;
 }
 
+.landing-main {
+  padding: 0;
+  max-width: none;
+}
+
 @media (max-width: 768px) {
   .page-main {
     padding: 86px 1rem 2rem;
@@ -23,5 +28,9 @@
 
   .auth-main {
     padding: 1rem;
+  }
+
+  .landing-main {
+    padding: 0;
   }
 }
