@@ -6,10 +6,10 @@
 .hero {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(212,175,55,0.3);
+  border: 1px solid rgba(212, 175, 55, 0.3);
   border-radius: 20px;
-  background: radial-gradient(circle at 30% 0%, rgba(255,107,0,0.22), transparent 40%),
-    radial-gradient(circle at 75% 10%, rgba(212,175,55,0.16), transparent 48%),
+  background: radial-gradient(circle at 30% 0%, rgba(255, 107, 0, 0.22), transparent 40%),
+    radial-gradient(circle at 75% 10%, rgba(212, 175, 55, 0.16), transparent 48%),
     var(--dark-2);
   text-align: center;
   padding: 2.2rem 1rem;
@@ -29,7 +29,7 @@
 .hero-om {
   color: var(--gold);
   font-size: 2.4rem;
-  text-shadow: 0 0 18px rgba(212,175,55,0.6);
+  text-shadow: 0 0 18px rgba(212, 175, 55, 0.6);
 }
 
 .hero h1 {
@@ -56,7 +56,7 @@
   right: -40px;
   top: -75px;
   border-radius: 50%;
-  border: 1px dashed rgba(212,175,55,0.2);
+  border: 1px dashed rgba(212, 175, 55, 0.2);
   animation: spin-slow 30s linear infinite;
 }
 
@@ -71,7 +71,7 @@
   border: 1px solid;
   border-radius: 999px;
   padding: 0.35rem 0.8rem;
-  background: rgba(0,0,0,0.15);
+  background: rgba(0, 0, 0, 0.15);
 }
 
 .hero-divider {
@@ -80,17 +80,23 @@
   opacity: 0.8;
 }
 
+/* ========================================================= */
+/* DETECTOR LAYOUT                                           */
+/* Row 1: Upload (left) | Tala Classification (right)        */
+/* Row 2: Sollukattu Sections (full width)                   */
+/* ========================================================= */
 .detector-grid {
   display: grid;
   grid-template-columns: minmax(300px, 1fr) 1.45fr;
   gap: 1rem;
+  align-items: start;
 }
 
 .upload-panel,
 .result-panel,
 .info-card {
   position: relative;
-  border: 1px solid rgba(212,175,55,0.3);
+  border: 1px solid rgba(212, 175, 55, 0.3);
   border-radius: 18px;
   background: var(--dark-2);
   padding: 1rem;
@@ -112,6 +118,14 @@
   position: sticky;
   top: 94px;
   align-self: start;
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/* Placeholder (before detection) sits in the right column */
+.result-panel {
+  grid-column: 2;
+  grid-row: 1;
 }
 
 .upload-panel h3 {
@@ -161,7 +175,7 @@
 .result-placeholder {
   min-height: 390px;
   position: relative;
-  border: 1px dashed rgba(212,175,55,0.3);
+  border: 1px dashed rgba(212, 175, 55, 0.3);
   border-radius: 16px;
   display: grid;
   place-items: center;
@@ -172,7 +186,7 @@
 .placeholder-rings {
   position: absolute;
   border-radius: 50%;
-  border: 1px dashed rgba(212,175,55,0.3);
+  border: 1px dashed rgba(212, 175, 55, 0.3);
   animation: spin-slow 24s linear infinite;
 }
 
@@ -265,6 +279,15 @@
 @media (max-width: 980px) {
   .detector-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Stack everything in one column, in order */
+  .detector-grid>.upload-panel,
+  .detector-grid>.result-panel,
+  .detector-grid>.section-a,
+  .detector-grid>.section-sollukattu {
+    grid-column: 1;
+    grid-row: auto;
   }
 
   .upload-panel {

@@ -85,6 +85,7 @@ html, body {
   justify-content: center;
   align-items: center;
   overflow: hidden;
+  padding: 2rem 0 4rem;
   background: radial-gradient(circle at center, rgba(212,175,55,0.08), transparent 45%),
     radial-gradient(circle at bottom left, rgba(255,107,0,0.06), transparent 42%),
     #0D0500;
@@ -160,57 +161,30 @@ html, body {
   animation: fadeInUp 0.8s ease both;
 }
 
-.hero-scroll-model {
-  width: min(100%, 760px);
-  margin: 0.35rem auto 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  border: 1px solid rgba(212,175,55,0.24);
-  border-radius: 16px;
-  background: linear-gradient(140deg, rgba(45,18,0,0.82), rgba(13,5,0,0.9));
-  box-shadow: inset 0 0 24px rgba(212,175,55,0.12), 0 0 30px rgba(255,107,0,0.08);
-  perspective: 1200px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(212,175,55,0.6) rgba(13,5,0,0.7);
+/* ===== HERO NATARAJA (big hero image) ===== */
+.hero-nataraja-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin: 10px auto 20px;
   animation: fadeInUp 0.85s ease both;
 }
 
-.hero-scroll-model::-webkit-scrollbar {
-  height: 8px;
-}
-
-.hero-scroll-model::-webkit-scrollbar-track {
-  background: rgba(13,5,0,0.75);
-}
-
-.hero-scroll-model::-webkit-scrollbar-thumb {
-  background: linear-gradient(90deg, rgba(255,107,0,0.86), rgba(212,175,55,0.86));
-  border-radius: 999px;
-}
-
-.hero-scroll-model-track {
-  width: max(1200px, 150%);
-  min-height: 300px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.hero-scroll-gap {
-  flex: 0 0 clamp(190px, 22vw, 300px);
-}
-
 .hero-nataraja-model {
-  flex: 0 0 auto;
-  width: clamp(220px, 34vw, 360px);
-  max-width: 100%;
+  width: min(90vw, 720px);
+  height: auto;
+  max-height: 75vh;
   object-fit: contain;
-  filter: drop-shadow(0 0 24px rgba(212,175,55,0.35));
-  transform-style: preserve-3d;
-  transition: transform 0.08s linear;
-  will-change: transform;
+  filter: drop-shadow(0 0 40px rgba(212,175,55,0.45));
+  animation: heroFloat 6s ease-in-out infinite;
   user-select: none;
   pointer-events: none;
+}
+
+@keyframes heroFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
 
 .hero-tamil {
@@ -1290,17 +1264,10 @@ html, body {
   }
 
   .hero-invocation { font-size: 18px; }
-  .hero-scroll-model-track {
-    width: max(980px, 170%);
-    min-height: 240px;
-  }
-
-  .hero-scroll-gap {
-    flex-basis: clamp(140px, 20vw, 220px);
-  }
 
   .hero-nataraja-model {
-    width: clamp(180px, 42vw, 300px);
+    width: 95vw;
+    max-height: 60vh;
   }
 
   .hero-tamil { font-size: 18px; }

@@ -1,5 +1,11 @@
 import os
 import pickle
+import uuid
+
+import scipy.signal
+if not hasattr(scipy.signal, "hann"):
+    import scipy.signal.windows
+    scipy.signal.hann = scipy.signal.windows.hann
 
 import librosa
 import noisereduce as nr
@@ -19,6 +25,8 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
 from config import Config
+from mudra_routes import mudra_bp
+from tala_sections_data import get_tala_predefined_data
 
 
 app = Flask(__name__)
@@ -27,6 +35,9 @@ app.config.from_object(Config)
 CORS(app)
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
+
+# Mudra detection routes (/api/mudra/predict)
+app.register_blueprint(mudra_bp)
 
 
 TALA_INFO = {
@@ -103,9 +114,9 @@ UNKNOWN_TALA_INFO = {
     "performance_tips": "Please upload a clearer Alaripu sample with steady rhythm and low background noise.",
 }
 
-MIN_TALA_CONFIDENCE = 0.55
-MIN_TALA_MARGIN = 0.12
-MIN_SIGNAL_STD = 0.01
+MIN_TALA_CONFIDENCE = 0.35
+MIN_TALA_MARGIN = 0.02
+MIN_SIGNAL_STD = 0.003
 
 
 class User(db.Model):
@@ -154,10 +165,29 @@ def current_user_id():
         return None
 
 
+def sanitize_json(obj):
+    """Recursively converts sets, numpy floats/ints, and arrays into standard JSON types."""
+    if isinstance(obj, dict):
+        return {k: sanitize_json(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [sanitize_json(v) for v in obj]
+    elif isinstance(obj, set):
+        return [sanitize_json(v) for v in sorted(list(obj))]
+    elif isinstance(obj, (np.floating, np.float32, np.float64)):
+        return float(obj)
+    elif isinstance(obj, (np.integer, np.int32, np.int64)):
+        return int(obj)
+    elif isinstance(obj, np.ndarray):
+        return sanitize_json(obj.tolist())
+    return obj
+
+
 def preprocess_audio(path: str):
     y, _ = librosa.load(path, sr=16000, mono=True)
-    y = nr.reduce_noise(y=y, sr=16000)
     y, _ = librosa.effects.trim(y, top_db=20)
+    if len(y) < 1600:
+        y, _ = librosa.load(path, sr=16000, mono=True)
+    y = nr.reduce_noise(y=y, sr=16000)
 
     target_length = 80000
     if len(y) < target_length:
@@ -165,7 +195,9 @@ def preprocess_audio(path: str):
     else:
         y = y[:target_length]
 
-    y = y / (np.max(np.abs(y)) + 1e-9)
+    max_val = np.max(np.abs(y))
+    if max_val > 0:
+        y = y / (max_val + 1e-9)
     return y.astype(np.float32)
 
 
@@ -176,11 +208,14 @@ def extract_embedding(waveform: np.ndarray):
 
 
 # Load models at startup
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODELS_DIR = os.path.join(BASE_DIR, "models") if os.path.exists(os.path.join(BASE_DIR, "models")) else "models"
+
 yamnet_model = hub.load("https://tfhub.dev/google/yamnet/1")
-classifier_model = tf.keras.models.load_model("models/tala_final_model.keras")
-with open("models/model_config.pkl", "rb") as f:
+classifier_model = tf.keras.models.load_model(os.path.join(MODELS_DIR, "tala_final_model.keras"))
+with open(os.path.join(MODELS_DIR, "model_config.pkl"), "rb") as f:
     model_config = pickle.load(f)
-with open("models/label_encoder.pkl", "rb") as f:
+with open(os.path.join(MODELS_DIR, "label_encoder.pkl"), "rb") as f:
     label_encoder = pickle.load(f)
 
 
@@ -267,8 +302,13 @@ def predict():
     if audio_file.filename == "":
         return jsonify({"error": "No file selected"}), 400
 
-    safe_name = secure_filename(audio_file.filename)
-    temp_path = os.path.join(app.config["UPLOAD_FOLDER"], f"tmp_{safe_name}")
+    orig_name = audio_file.filename or "recording.wav"
+    _, raw_ext = os.path.splitext(orig_name)
+    ext = raw_ext.lower() if raw_ext else ".wav"
+    safe_stem = secure_filename(os.path.splitext(orig_name)[0]) or "audio"
+    safe_name = f"{safe_stem}{ext}"
+    unique_id = uuid.uuid4().hex[:8]
+    temp_path = os.path.join(app.config["UPLOAD_FOLDER"], f"tmp_{unique_id}_{safe_name}")
 
     try:
         audio_file.save(temp_path)
@@ -278,27 +318,46 @@ def predict():
         embedding, _, _ = extract_embedding(waveform)
 
         pred_probs = classifier_model.predict(np.expand_dims(embedding, axis=0), verbose=0)[0]
+
+        # If primary 5s slice gives moderate confidence (<0.55), also check mid-performance section
+        try:
+            y_full, _ = librosa.load(temp_path, sr=16000, mono=True)
+            y_full_trim, _ = librosa.effects.trim(y_full, top_db=20)
+            if float(np.max(pred_probs)) < 0.55 and len(y_full_trim) > 120000:
+                mid_start = int((len(y_full_trim) - 80000) * 0.35)
+                w_mid = y_full_trim[mid_start : mid_start + 80000]
+                w_mid_nr = nr.reduce_noise(y=w_mid, sr=16000)
+                max_mid = np.max(np.abs(w_mid_nr))
+                if max_mid > 0:
+                    w_mid_norm = w_mid_nr / (max_mid + 1e-9)
+                    emb_mid, _, _ = extract_embedding(w_mid_norm.astype(np.float32))
+                    probs_mid = classifier_model.predict(np.expand_dims(emb_mid, axis=0), verbose=0)[0]
+                    if float(np.max(probs_mid)) > float(np.max(pred_probs)):
+                        pred_probs = probs_mid
+                        signal_std = float(np.std(w_mid_norm))
+        except Exception:
+            pass
+
         sorted_indices = np.argsort(pred_probs)[::-1]
         predicted_idx = int(np.argmax(pred_probs))
+
+        if hasattr(label_encoder, "classes_"):
+            ordered_classes = [str(name).lower() for name in label_encoder.classes_]
+        else:
+            ordered_classes = [str(name).lower() for name in model_config.get("label_classes", ["chatusra", "kandam", "tishra"])]
+
+        class_map = {name: idx for idx, name in enumerate(ordered_classes)}
 
         if hasattr(label_encoder, "inverse_transform"):
             predicted_label = label_encoder.inverse_transform([predicted_idx])[0]
         else:
-            class_names = model_config.get("class_names", ["tishra", "chatusra", "kandam"])
-            predicted_label = class_names[predicted_idx]
+            predicted_label = ordered_classes[predicted_idx]
 
         predicted_label = str(predicted_label).lower()
         confidence = float(pred_probs[predicted_idx])
 
         second_best_confidence = float(pred_probs[sorted_indices[1]]) if len(sorted_indices) > 1 else 0.0
         confidence_margin = confidence - second_best_confidence
-
-        if hasattr(label_encoder, "classes_"):
-            ordered_classes = [str(name).lower() for name in label_encoder.classes_]
-        else:
-            ordered_classes = [str(name).lower() for name in model_config.get("class_names", ["tishra", "chatusra", "kandam"])]
-
-        class_map = {name: idx for idx, name in enumerate(ordered_classes)}
 
         def class_score(name: str):
             idx = class_map.get(name)
@@ -308,42 +367,85 @@ def predict():
         chatusra_score = class_score("chatusra")
         kandam_score = class_score("kandam")
 
-        is_not_detected = (
+        is_not_detected = bool(
             signal_std < MIN_SIGNAL_STD
-            or confidence < MIN_TALA_CONFIDENCE
-            or confidence_margin < MIN_TALA_MARGIN
+            or (confidence < MIN_TALA_CONFIDENCE and confidence_margin < MIN_TALA_MARGIN)
         )
+        is_low_confidence = bool(confidence < 0.50 and not is_not_detected)
 
         final_label = "unknown" if is_not_detected else predicted_label
         final_tala_info = UNKNOWN_TALA_INFO if is_not_detected else TALA_INFO.get(predicted_label, TALA_INFO["chatusra"])
 
-        record = Prediction(
-            user_id=user_id,
-            filename=safe_name,
-            predicted=final_label,
-            confidence=confidence,
-            tishra_score=tishra_score,
-            chatusra_score=chatusra_score,
-            kandam_score=kandam_score,
-            audio_duration=5.0,
+        # Audio duration (full recording, before trimming)
+        try:
+            y_dur, _ = librosa.load(temp_path, sr=16000, mono=True)
+            full_duration = round(float(len(y_dur) / 16000), 2)
+        except Exception:
+            full_duration = 5.0
+
+        # Retrieve centralized predefined Sollukattu sections and description
+        predefined_data = get_tala_predefined_data(final_label if not is_not_detected else None)
+        sections = predefined_data.get("sections", []) if predefined_data else []
+        description = (
+            predefined_data.get("description", final_tala_info.get("description", ""))
+            if predefined_data
+            else final_tala_info.get("description", "")
         )
-        db.session.add(record)
-        db.session.commit()
+
+        rec_id = None
+        try:
+            record = Prediction(
+                user_id=user_id,
+                filename=safe_name,
+                predicted=final_label,
+                confidence=confidence,
+                tishra_score=tishra_score,
+                chatusra_score=chatusra_score,
+                kandam_score=kandam_score,
+                audio_duration=full_duration,
+            )
+            db.session.add(record)
+            db.session.commit()
+            rec_id = record.id
+        except Exception as db_err:
+            db.session.rollback()
+            app.logger.warning(f"Database prediction record save skipped: {db_err}")
+
+        # Format readable tala type
+        tala_display_name = (
+            "Not Detected"
+            if is_not_detected
+            else "Tishra"
+            if final_label == "tishra"
+            else "Chatusra"
+            if final_label == "chatusra"
+            else "Khanda"
+            if final_label == "kandam"
+            else final_label.title()
+        )
 
         return (
             jsonify(
-                {
-                    "predicted": final_label,
-                    "confidence": confidence,
-                    "not_detected": is_not_detected,
-                    "scores": {
-                        "tishra": tishra_score,
-                        "chatusra": chatusra_score,
-                        "kandam": kandam_score,
-                    },
-                    "tala_info": final_tala_info,
-                    "record_id": record.id,
-                }
+                sanitize_json(
+                    {
+                        "predicted": final_label,
+                        "tala_type": tala_display_name,
+                        "confidence": confidence,
+                        "not_detected": is_not_detected,
+                        "is_low_confidence": is_low_confidence,
+                        "description": description,
+                        "sections": sections,
+                        "section_count": len(sections),
+                        "scores": {
+                            "tishra": tishra_score,
+                            "chatusra": chatusra_score,
+                            "kandam": kandam_score,
+                        },
+                        "tala_info": final_tala_info,
+                        "audio_duration": full_duration,
+                        "record_id": rec_id,
+                    }
+                )
             ),
             200,
         )

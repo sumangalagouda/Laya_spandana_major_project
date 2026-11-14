@@ -26,6 +26,7 @@ function Navbar() {
         {isAuthenticated ? (
           <>
             <NavLink to="/detect">Detect</NavLink>
+            <NavLink to="/mudra">Mudra</NavLink>
             <NavLink to="/learn">🎓 Learn</NavLink>
             <NavLink to="/history">History</NavLink>
             <NavLink to="/bharatanatyam">Bharatanatyam</NavLink>

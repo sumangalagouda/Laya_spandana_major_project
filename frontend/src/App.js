@@ -9,6 +9,7 @@ import History from "./pages/History";
 import Home from "./pages/Home";
 import LearnTalas from "./pages/LearnTalas";
 import Login from "./pages/Login";
+import MudraDetector from "./pages/MudraDetector";
 import NatarajaLandingEmbed from "./pages/NatarajaLandingEmbed";
 import Register from "./pages/Register";
 import "./App.css";
@@ -38,6 +39,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Home />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mudra"
+            element={
+              <ProtectedRoute>
+                <MudraDetector />
               </ProtectedRoute>
             }
           />

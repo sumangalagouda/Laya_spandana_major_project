@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import AudioUploader from "../components/AudioUploader";
@@ -16,6 +16,20 @@ function Home() {
   const [file, setFile] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const audioRef = useRef(null);
+
+  const handlePlaySegment = (startTime) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = Math.max(0, startTime);
+      audioRef.current.play().catch(() => { });
+      toast.success(`Playing from ${Math.floor(startTime / 60)}:${String(Math.floor(startTime % 60)).padStart(2, "0")}`, {
+        id: "audio-seek",
+        duration: 1500,
+      });
+    } else {
+      toast("Audio player is not ready", { id: "audio-seek" });
+    }
+  };
 
   const detectTala = async () => {
     if (!file) return;
@@ -27,13 +41,19 @@ function Home() {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setResult(data);
-      if (data?.not_detected || data?.predicted === "unknown") {
-        toast("Tala not detected clearly. Try a cleaner rhythmic sample.");
+      if (data?.not_detected && data?.predicted === "unknown") {
+        toast("Tala not clearly distinguished. Try a cleaner rhythmic sample.", { icon: "⚠️" });
+      } else if (data?.is_low_confidence) {
+        toast.success(`Tala detected: ${data?.tala_type || "Rhythm"} (moderate confidence)`, { icon: "🥁" });
       } else {
-        toast.success("Tala detected successfully.");
+        toast.success(`Tala detected: ${data?.tala_type || "Rhythm"}!`, { icon: "🥁" });
       }
     } catch (err) {
-      toast.error(err?.response?.data?.error || "Detection failed");
+      if (!err?.response) {
+        toast.error("Cannot connect to backend server. Make sure Flask is running on port 5000.");
+      } else {
+        toast.error(err?.response?.data?.error || "Detection failed. Please try another audio file.");
+      }
     } finally {
       setLoading(false);
     }
@@ -65,6 +85,7 @@ function Home() {
         <div className="hero-divider">✦ 🪷 ✦</div>
       </motion.section>
 
+      {/* Layout: Upload (left) + Tala Classification (right), Sollukattu full width below */}
       <section className="detector-grid">
         <motion.div
           className="upload-panel"
@@ -74,7 +95,7 @@ function Home() {
           transition={{ duration: 0.6, delay: 0.1 }}
         >
           <h3>Upload Audio</h3>
-          <AudioUploader file={file} setFile={setFile} />
+          <AudioUploader file={file} setFile={setFile} audioRef={audioRef} />
           <button className="detect-btn" onClick={detectTala} disabled={!file || loading}>
             {loading ? "Detecting..." : "Detect Tala"}
           </button>
@@ -85,16 +106,16 @@ function Home() {
           </div>
         </motion.div>
 
-        <motion.div
-          className="result-panel"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
-          {result ? (
-            <TalaResult result={result} />
-          ) : (
+        {result ? (
+          <TalaResult result={result} onPlaySegment={handlePlaySegment} />
+        ) : (
+          <motion.div
+            className="result-panel"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
             <div className="result-placeholder">
               <div className="placeholder-rings ring-a" />
               <div className="placeholder-rings ring-b" />
@@ -102,8 +123,8 @@ function Home() {
               <span>♪</span>
               <p>Result will appear here after detection.</p>
             </div>
-          )}
-        </motion.div>
+          </motion.div>
+        )}
       </section>
 
       <section className="info-section">

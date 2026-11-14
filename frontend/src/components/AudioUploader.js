@@ -4,7 +4,7 @@ import "./AudioUploader.css";
 
 const ACCEPT = ".wav,.aac,.mp3,.flac,.m4a";
 
-function AudioUploader({ file, setFile }) {
+function AudioUploader({ file, setFile, audioRef }) {
   const inputRef = useRef(null);
   const [dragOver, setDragOver] = useState(false);
   const [audioPreviewUrl, setAudioPreviewUrl] = useState("");
@@ -82,7 +82,7 @@ function AudioUploader({ file, setFile }) {
                 ))}
               </div>
 
-              <audio controls src={audioPreviewUrl} preload="metadata" className="preview-audio" />
+              <audio ref={audioRef} controls src={audioPreviewUrl} preload="metadata" className="preview-audio" />
             </div>
           )}
         </>
