@@ -44,7 +44,6 @@ backend/*.log
 
 # Optional: ignore local ML model artifacts/checkpoints
 *.h5
-*.keras
 *.ckpt
 
 # ------------------------------
